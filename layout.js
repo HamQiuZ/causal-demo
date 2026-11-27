@@ -392,17 +392,17 @@
     watchRing();
     let nav=$('.section-float-nav');
     if(!nav){nav=document.createElement('nav');nav.className='section-float-nav';nav.setAttribute('aria-label','Page sections');document.body.append(nav);}
-    const sections=[['overview','Overview'],['preview','Showcase'],['section-pane-action-1','Motion'],['section-pane-compare-one-reference','Inputs'],['three-ways','Gallery'],['longform','Duration'],['more-demos','Scenes'],['citation','Citation']];
+    const sections=[['preview','Showcase'],['overview','Overview'],['section-pane-action-1','Motion'],['section-pane-compare-one-reference','Inputs'],['three-ways','Gallery'],['longform','Duration'],['more-demos','Scenes'],['citation','Citation']];
     nav.innerHTML=sections.map(([id,label],i)=>`<a href="#${id}"><span>${String(i+1).padStart(2,'0')}</span>${label}</a>`).join('');updateSectionNav();
   }
   const ringPreview=document.createElement("video");
   ringPreview.muted=true;ringPreview.playsInline=true;ringPreview.preload="none";
   let ringObserver=null,ringVisible=false,warmGeneration=0,warmVideos=[];
-  const deckActivity={hover:false,animation:false};
+  const deckActivity={pointer:false,focus:false,animation:false};
   function setDeckActivity(key,value){
     if(deckActivity[key]===value)return;
     deckActivity[key]=value;
-    window.dispatchEvent(new CustomEvent("showcase-activity",{detail:deckActivity.hover||deckActivity.animation}));
+    window.dispatchEvent(new CustomEvent("showcase-activity",{detail:Object.values(deckActivity).some(Boolean)}));
   }
   function clearRingWarm(){
     warmGeneration++;
@@ -440,11 +440,11 @@
       if(ringVisible){
         if(orbitPosition!==previewIndex)positionDeck(false);
         scheduleRingWarm();
-      } else {stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("hover",false);}
+      } else {stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("pointer",false);setDeckActivity("focus",false);}
     },{threshold:0});
     ringObserver.observe(deck);
   }
-  document.addEventListener("visibilitychange",()=>{if(document.hidden){stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("hover",false);}else if(ringVisible){if(orbitPosition!==previewIndex)positionDeck(false);scheduleRingWarm();}});
+  document.addEventListener("visibilitychange",()=>{if(document.hidden){stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("pointer",false);setDeckActivity("focus",false);}else if(ringVisible){if(orbitPosition!==previewIndex)positionDeck(false);scheduleRingWarm();}});
   function renderDeck() {
     const entries=previewEntries();previewIndex=Math.max(0,Math.min(previewIndex,entries.length-1));
     $('.deck-cards').innerHTML=entries.map((entry,i)=>{const item=byId[entry.id],ringPoster=ringPosters[`${entry.id}|${entry.weight}`],image=escape(imageAsset(ringPoster?.src || poster(entry,item))),ratio=item.width/item.height,w=Math.min(1,ratio),h=Math.min(1,1/ratio),priority=i===previewIndex?'high':'low';return `<div class="deck-card" data-deck-index="${i}" role="button" tabindex="-1" data-preview-card data-pane="preview-tasks" data-item="${escape(entry.id)}" style="--orbit-width:${w};--orbit-height:${h}" aria-label="Open original example"><div class="orbit-card-body"><div class="preview-frame orbit-front"><img src="${image}" alt="" loading="${i===previewIndex?'eager':'lazy'}" fetchpriority="${priority}" decoding="async"></div><div class="orbit-back" aria-hidden="true"><img src="${image}" alt="" loading="lazy" fetchpriority="${priority}" decoding="async"></div></div></div>`;}).join('');
@@ -454,7 +454,7 @@
   let orbitPosition=0,orbitFrame=0;
   function positionDeck(animate=true){
     cancelAnimationFrame(orbitFrame);const entries=previewEntries(),cards=[...document.querySelectorAll('[data-deck-index]')],stage=$('.task-deck');if(!stage)return;
-    const width=stage.clientWidth,compact=matchMedia('(min-width:1100px)').matches,mobile=!compact&&width<700,rx=compact?width*.4:mobile?width*.69:Math.min(430,width*.4),ry=compact?96:mobile?90:126;
+    const width=stage.clientWidth,mobile=width<700,rx=mobile?width*.69:Math.min(465,width*.42),ry=mobile?90:112;
     const tilt=-12*Math.PI/180,start=orbitPosition,travel=previewIndex-start,began=performance.now(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const visibleCount=Math.min(15,entries.length),cosTilt=Math.cos(tilt),sinTilt=Math.sin(tilt);
     const movingCards=cards.map(card=>({card,index:Number(card.dataset.deckIndex),visible:!card.hidden,rear:card.classList.contains('is-rear'),z:card.style.zIndex}));
@@ -519,7 +519,7 @@
       const permute=(prefix,remaining)=>{if(!remaining.length){const candidate=justifiedLayout(prefix,width,gap,target,minFactor);if(candidate&&(!layout||candidate.cost<layout.cost))layout=candidate;return;}remaining.forEach((e,i)=>permute([...prefix,e],remaining.filter((_,j)=>i!==j)));};
       permute([],entries);
     }
-    grid.innerHTML=(layout?.rows||[]).map(row=>`<div class="task-gallery-row">${row.entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height);return `<div class="task-gallery-card task-${escape(i.task)} ${e.id===activeTask?'is-active':''}" style="width:${row.height*ratio}px;height:${row.height}px" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}"><span class="firstlook-dot"></span><span class="task-card-badge">${(taskSpecs[i.task]?.[1]||[]).map(icon).join('')}<b>→</b>${(taskSpecs[i.task]?.[2]||[]).map(icon).join('')}</span><img src="${escape(poster(e,i))}" alt="" loading="lazy" decoding="async"><video muted playsinline preload="none"></video></div>`;}).join('')}</div>`).join('');
+    grid.innerHTML=(layout?.rows||[]).map(row=>`<div class="task-gallery-row">${row.entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height);return `<div class="task-gallery-card task-${escape(i.task)} ${e.id===activeTask?'is-active':''}" style="width:${row.height*ratio}px;height:${row.height}px" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}"><span class="firstlook-dot"></span><span class="task-card-badge" aria-hidden="true">▶ Play</span><img src="${escape(poster(e,i))}" alt="" loading="lazy" decoding="async"><video muted playsinline preload="none"></video></div>`;}).join('')}</div>`).join('');
     const selected=entries.find(e=>e.id===activeTask)||entries[0];if(selected)showTaskInfo(selected.id);
   }
   document.addEventListener('pointerover',event=>{const h=event.target.closest('[data-hex]');if(h&&!h.contains(event.relatedTarget))$('#three-ways').dataset.highlight=h.dataset.hex;});
@@ -609,7 +609,7 @@
   document.addEventListener('click',event=>{
     const step=event.target.closest('[data-deck-step]');if(step){stepDeck(Number(step.dataset.deckStep));return;}
     const first=event.target.closest('.deck-card');if(first){const index=Number(first.dataset.deckIndex);if(index!==previewIndex){stopVideos();previewIndex=index;positionDeck();}else openCompare(paneById('preview-tasks'),first.dataset.item);return;}
-    const taskCard=event.target.closest('.task-gallery-card');if(taskCard){showTaskInfo(taskCard.dataset.item);previewCard(taskCard);return;}
+    const taskCard=event.target.closest('.task-gallery-card');if(taskCard){showTaskInfo(taskCard.dataset.item);openCompare(paneById('pane-task-gallery'),taskCard.dataset.item);return;}
     const motion=event.target.closest('[data-motion-choice]');if(motion){stopVideos();actionChoice=motion.dataset.motionChoice;$('#section-pane-action-1').outerHTML=actionShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchVideoPosters();return;}
     const original=event.target.closest('[data-long-open]');if(original){openLongOriginal(Number(original.dataset.longOpen));return;}
     const longer=event.target.closest('[data-long-choice]');if(longer){stopVideos();longFull=false;longChoice=Number(longer.dataset.longChoice);$('#longform').outerHTML=longShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchLongVideo();watchVideoPosters();return;}
@@ -639,17 +639,17 @@
     video.preload="auto";video.src=byId[entry.id].weights[entry.weight]; video.muted=true;
     video.play().catch(()=>{});
   }
-  document.addEventListener("pointerover",event=>{const card=event.target.closest("[data-preview-card]");if(card && event.pointerType!=="touch" && !card.contains(event.relatedTarget)){if(card.matches('.deck-card'))setDeckActivity("hover",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
-  document.addEventListener("focusin",event=>{const card=event.target.closest("[data-preview-card]");if(card){if(card.matches('.deck-card'))setDeckActivity("hover",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
-  document.addEventListener("focusout",event=>{if(event.target.closest?.('.deck-card')&&!event.relatedTarget?.closest?.('.deck-card'))setDeckActivity("hover",false);});
-  document.addEventListener("pointerout",event=>{const card=event.target.closest("[data-preview-card]");if(card && !card.contains(event.relatedTarget)){if(card.matches('.deck-card')&&!event.relatedTarget?.closest?.('.deck-card'))setDeckActivity("hover",false);card.classList.remove("is-featured");card.querySelectorAll("video[src]").forEach(unloadMedia);}});
+  document.addEventListener("pointerover",event=>{const card=event.target.closest("[data-preview-card]");if(card && event.pointerType!=="touch" && !card.contains(event.relatedTarget)){if(card.matches('.deck-card'))setDeckActivity("pointer",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
+  document.addEventListener("focusin",event=>{const card=event.target.closest("[data-preview-card]");if(card){if(card.matches('.deck-card'))setDeckActivity("focus",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
+  document.addEventListener("focusout",event=>{const card=event.target.closest?.('.deck-card');if(card&&!event.relatedTarget?.closest?.('.deck-card')){setDeckActivity("focus",false);if(!card.matches(':hover'))card.querySelectorAll('video[src]').forEach(unloadMedia);}});
+  document.addEventListener("pointerout",event=>{const card=event.target.closest("[data-preview-card]");if(card && !card.contains(event.relatedTarget)){if(card.matches('.deck-card')&&!event.relatedTarget?.closest?.('.deck-card'))setDeckActivity("pointer",false);card.classList.remove("is-featured");card.querySelectorAll("video[src]").forEach(unloadMedia);}});
   document.addEventListener("playing",event=>{if(event.target.matches?.(".deck-card video"))event.target.classList.add("is-ready");},true);
   document.addEventListener("keydown",event=>{if(event.target.matches("[data-preview-card]") && ["Enter"," "].includes(event.key)){event.preventDefault();event.target.click();}});
   function render() {
     if (dialog.open) dialog.close();
     stopVideos();
     railObserver.disconnect();
-    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r028</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
+    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r029</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
     const stage=(id)=>{let node=$(`#${id}`);if(!node){node=document.createElement('section');node.id=id;node.className='section section-shell';}return node;};
     const motion=stage('motion-stage'),tasks=stage('tasks-stage'),long=stage('long-stage');
     $('#hero-showcase').after(motion);motion.after($('#task-proof'));$('#task-proof').after(tasks);tasks.after(long);long.after($('#more-demos'));$('#more-demos').after($('#method-details-container'));

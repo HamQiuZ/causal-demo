@@ -554,7 +554,7 @@
   function tick(now) {
     if (reduced.matches) { preferencesChanged(); return; }
     if (lastPaint === null) lastPaint = now;
-    if (now - lastPaint >= 1000 / 30 - .5) {
+    if (now - lastPaint >= 1000 / (showcaseBusy ? 15 : 30) - .5) {
       time += (now - lastPaint) / 1000;
       lastPaint = now;
       paint();
@@ -563,7 +563,7 @@
   }
 
   function sync() {
-    const playing = width && height && visible && !document.hidden && !reduced.matches && !showcaseBusy;
+    const playing = width && height && visible && !document.hidden && !reduced.matches;
     if (playing && !frame) frame = requestAnimationFrame(tick);
     if (!playing && frame) {
       cancelAnimationFrame(frame);
