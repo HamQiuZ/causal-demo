@@ -61,7 +61,7 @@
   let gateX = 0, gateY = 0, reach = 0, radius = 1, windRadius = 1;
   let compact, grains = [], rim, facePaths = [], planes = [];
   let titleBounds;
-  let visible = true, frame = 0, lastPaint = null, time = reduced.matches ? stillTime : 0;
+  let visible = true, showcaseBusy = false, frame = 0, lastPaint = null, time = reduced.matches ? stillTime : 0;
 
   function segmentAt(path, distance) {
     const nodes = path.nodes;
@@ -563,7 +563,7 @@
   }
 
   function sync() {
-    const playing = width && height && visible && !document.hidden && !reduced.matches;
+    const playing = width && height && visible && !document.hidden && !reduced.matches && !showcaseBusy;
     if (playing && !frame) frame = requestAnimationFrame(tick);
     if (!playing && frame) {
       cancelAnimationFrame(frame);
@@ -626,18 +626,19 @@
   }
   reduced.addEventListener("change", preferencesChanged);
   document.addEventListener("visibilitychange", sync);
+  window.addEventListener("showcase-activity", event => { showcaseBusy = event.detail; sync(); });
 })();
 
 (() => {
   const video = document.querySelector(".hero-background-video");
   if (!video) return;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  let visible = true;
+  let visible = true, showcaseBusy = false;
   function syncVideo() {
     if (reduced.matches) {
       video.pause();
       if (video.hasAttribute("src")) { video.removeAttribute("src"); video.load(); }
-    } else if (visible && !document.hidden) {
+    } else if (visible && !document.hidden && !showcaseBusy) {
       if (!video.hasAttribute("src")) video.src = video.dataset.src;
       video.play().catch(() => {});
     } else {
@@ -649,5 +650,6 @@
   }
   reduced.addEventListener("change", syncVideo);
   document.addEventListener("visibilitychange", syncVideo);
+  window.addEventListener("showcase-activity", event => { showcaseBusy = event.detail; syncVideo(); });
   syncVideo();
 })();

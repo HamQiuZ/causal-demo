@@ -754,3 +754,8 @@ button.pt-chip{cursor:pointer}button.pt-chip:hover{border-color:var(--task-color
 @media(max-width:700px) {
  .hero-subtitle { max-width:340px;margin:6px 16px 0;font-size:12px;line-height:1.35; }
 }
+
+.early-preview:hover .deck-card,.task-deck.is-animating .deck-card { will-change:transform; }
+.deck-card.is-rear .orbit-back { box-shadow:0 0 0 2px #fff,0 4px 9px #173c281c; }
+.orbit-halo { filter:none; }
+.deck-card video { transition:opacity .18s ease; }

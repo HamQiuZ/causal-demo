@@ -9,7 +9,7 @@
   };
   const staticSite = !!window.LAYOUT_STATIC;
   const siteAsset = path => staticSite ? (window.LAYOUT_URLS[path] || path) : path;
-  let board, library, byId, ringPosters = {}, edit = !staticSite && !window.LAYOUT_ARCHIVE && !new URLSearchParams(location.search).has("view"), drawerOpen = true;
+  let board, library, byId, ringPosters = {}, optimizedImages = {}, edit = !staticSite && !window.LAYOUT_ARCHIVE && !new URLSearchParams(location.search).has("view"), drawerOpen = true;
   let selected = {}, drag = null, saveQueue = Promise.resolve(), activeCompare = null;
   const originalPrompts = new Map();
   let promptSerial = 0;
@@ -43,6 +43,13 @@
   const railObserver = new ResizeObserver(entries => entries.forEach(({target}) => {
     target.closest(".layout-rail")?.style.setProperty("--rail-player-height", `${target.offsetHeight}px`);
   }));
+  const lazyPosters = new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{
+    if(!isIntersecting)return;
+    const url=target.dataset.poster;target.poster=url;
+    if(target.matches("[data-long-video]"))target.parentElement.style.setProperty("--long-poster",`url(${JSON.stringify(url)})`);
+    delete target.dataset.poster;lazyPosters.unobserve(target);
+  }),{rootMargin:"300px"});
+  const watchVideoPosters = () => document.querySelectorAll("video[data-poster]").forEach(video=>lazyPosters.observe(video));
 
   const isInputVideo = media => media instanceof HTMLVideoElement && !edit &&
     !!media.closest("#section-pane-compare-one-reference") && media.matches("[data-compare-video]");
@@ -110,7 +117,11 @@
   const placement = id => placements(id)[0];
   const duration = item => item.duration == null ? "duration unknown" : `${Math.round(item.duration)} s`;
   const caption = (entry, item) => fullTask(entry.caption || item.caption || item.task);
-  const poster = (entry, item) => item.posters[entry.weight] || item.poster;
+  const imageAsset = url => {
+    const optimized = !staticSite && optimizedImages[url];
+    return optimized ? (window.LAYOUT_ARCHIVE || "") + optimized.path : url;
+  };
+  const poster = (entry, item) => imageAsset(item.posters[entry.weight] || item.poster);
   const hasVideo = (entry, item) => !!item.weights[entry.weight];
   const grouped = pane => pane.mode === "rail" && pane.group_by_reference !== false;
   const setName = set => set === "legacy_g700" ? "More examples" : set;
@@ -120,7 +131,7 @@
   function player(entry, item, pane) {
     const available = hasVideo(entry, item);
     return `<div class="layout-player ${escape(item.orientation)}" style="--aspect:${item.width / item.height};--rail-max-width:${78 * item.width / item.height}vh">
-      <video controls preload="none" playsinline poster="${escape(poster(entry,item))}" data-player="${escape(pane.id)}:${escape(item.id)}"></video>
+      <video controls preload="none" playsinline data-poster="${escape(poster(entry,item))}" data-player="${escape(pane.id)}:${escape(item.id)}"></video>
       ${available ? `<button class="layout-play" data-action="play" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}" aria-label="Play ${escape(caption(entry,item))}">▶</button>` : '<span class="layout-missing">not run yet</span>'}
     </div>`;
   }
@@ -147,7 +158,7 @@
     const item = byId[entry.id];
     if (!item) return "";
     const inside = rail ? `<button class="layout-rail-card ${selected[pane.id] === entry.id ? "selected" : ""}" data-action="select" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}">
-      <img loading="lazy" src="${escape(poster(entry,item))}" alt=""><span><strong>${escape(group ? item.image_id : caption(entry,item))}</strong>${group ? `<small>${group.length} variant${group.length === 1 ? "" : "s"}</small>` : ""}${tags(entry,item)}${hasVideo(entry,item) ? "" : "<small>not run yet</small>"}</span></button>` :
+      <img loading="lazy" decoding="async" src="${escape(poster(entry,item))}" alt=""><span><strong>${escape(group ? item.image_id : caption(entry,item))}</strong>${group ? `<small>${group.length} variant${group.length === 1 ? "" : "s"}</small>` : ""}${tags(entry,item)}${hasVideo(entry,item) ? "" : "<small>not run yet</small>"}</span></button>` :
       `${player(entry,item,pane)}<button class="source-prompt-link" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}">View prompts ↗</button>`;
     return `<div class="layout-card" style="--card-aspect:${item.width / item.height}" data-drop-pane="${escape(pane.id)}" data-drop-item="${escape(item.id)}" ${edit ? `draggable="true" data-drag-pane="${escape(pane.id)}" data-drag-item="${escape(item.id)}"` : ""}>${inside}${group ? "" : inspector(pane,entry,item,index)}</div>`;
   }
@@ -163,7 +174,15 @@
     };
     return `<div class="layout-prompts">${detail("Global prompt",global)}${detail("Motion prompt",motion)}</div>`;
   }
-  let promptOverrides={},extraItems=[],longChapters={};
+  let promptOverrides={},extraItems=[],longChapters={},promptLoad=null;
+  function ensurePrompts(){
+    if(!promptLoad){
+      const url=staticSite?"data/prompts.json":window.LAYOUT_ARCHIVE?window.LAYOUT_ARCHIVE+"/prompts.json":"/assets/prompts-r022.json";
+      promptLoad=fetch(url).then(r=>{if(!r.ok)throw Error("Prompts unavailable");return r.json();}).then(data=>{promptOverrides=data||{};return true;})
+        .catch(()=>{promptLoad=null;return false;});
+    }
+    return promptLoad;
+  }
   function taskGalleryPane(){
     const pane=board.panes.find(p=>p.id==='pane-task-gallery');if(!pane)return pane;
     const have=new Set(pane.items.map(e=>e.id)),items=[...pane.items];
@@ -247,8 +266,8 @@
       const time = duration(item), label = action ? item.segments[1].action : fullTask(item.task);
       return `<div class="layout-compare-unit">${!isAction ? `<h3 class="compare-task-name">${taskLabel(item.task)}</h3>` : ""}<div class="layout-compare-panel" role="button" tabindex="0" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}" data-drop-pane="${escape(pane.id)}" data-drop-item="${escape(entry.id)}" ${edit ? `draggable="true" data-drag-pane="${escape(pane.id)}" data-drag-item="${escape(entry.id)}"` : ""} aria-label="${escape(`${label}, ${time}. Preview and open player`)}">
         <div class="layout-compare-media">
-          <img loading="lazy" src="${escape(poster(entry,item))}" alt="">
-          <video preload="none" muted playsinline poster="${escape(poster(entry,item))}" data-compare-video></video>
+          <img loading="lazy" decoding="async" src="${escape(poster(entry,item))}" alt="">
+          <video preload="none" muted playsinline data-compare-video></video>
         </div>
         <div class="layout-compare-shade"></div>
         <div class="layout-compare-label"><strong data-current-action="${escape(entry.id)}">${escape(label)}</strong>
@@ -307,7 +326,7 @@
     if (valid.length && pane.mode === "grid") contents = `<div class="layout-grid" style="--cols:${pane.cols}">${valid.map((e,i) => card(pane,e,i,false)).join("")}</div>`;
     if (valid.length && pane.mode === "compare") contents = compareContent(pane, valid);
     if (pane.id === "pane-action-1" && !edit) contents = `<div class="branch-film"><video controls playsinline preload="none" poster="/assets/action-branch-r005.jpg" data-branch-film></video><button class="layout-play" data-action="branch-film-play" data-pane="${escape(pane.id)}" aria-label="Play four-way motion film">▶</button></div>
-      <div class="branch-originals"><p>Explore the originals</p><div>${valid.map(entry => `<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}"><img loading="lazy" src="${escape(poster(entry,byId[entry.id]))}" alt=""><span>${escape(byId[entry.id].segments[1].action)} ↗</span></button>`).join("")}</div></div>`;
+      <div class="branch-originals"><p>Explore the originals</p><div>${valid.map(entry => `<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}"><img loading="lazy" decoding="async" src="${escape(poster(entry,byId[entry.id]))}" alt=""><span>${escape(byId[entry.id].segments[1].action)} ↗</span></button>`).join("")}</div></div>`;
     return `<article class="layout-pane" id="section-${escape(pane.id)}" data-drop-pane="${escape(pane.id)}">
       <div class="section-heading"><div><h2 class="section-title">${escape(pane.title || "Untitled pane")}</h2></div>
         <div class="layout-heading-actions"><button class="layout-collapse" ${pane.id === "scene-examples" ? "hidden" : ""} data-action="collapse" data-pane="${escape(pane.id)}" aria-expanded="${!pane.collapsed}">${pane.collapsed ? "Expand" : "Collapse"}</button></div></div>
@@ -326,7 +345,7 @@
       <input data-filter="image" value="${escape(filters.image)}" placeholder="Filter image ID" aria-label="Filter image ID">
       <label><input type="checkbox" data-filter="unused" ${filters.unused ? "checked" : ""}> Unused only</label></div>
       ${visible.map(item => { const placed = placements(item.id); return `<div class="layout-library-item ${placed.length ? "used" : ""}" draggable="true" data-drag-item="${escape(item.id)}" data-drag-pane="">
-        <img loading="lazy" src="${escape(item.poster)}" alt=""><div><strong>${escape(item.id)} · ${escape(item.image_id)}</strong><small>${escape(setName(item.set))} · ${escape(fullTask(item.task))}</small>
+        <img loading="lazy" decoding="async" src="${escape(imageAsset(item.poster))}" alt=""><div><strong>${escape(item.id)} · ${escape(item.image_id)}</strong><small>${escape(setName(item.set))} · ${escape(fullTask(item.task))}</small>
         ${placed.length ? `<small>In ${escape(placed.map(p => p.title).join(", "))}</small>` : ""}
         <select aria-label="Destination for ${escape(item.id)}" data-destination="${escape(item.id)}">${board.panes.map(p => `<option value="${escape(p.id)}">${escape(p.title)}</option>`).join("")}</select>
         <button data-action="library-add" data-item="${escape(item.id)}">Add to pane</button></div></div>`; }).join("")}`;
@@ -350,24 +369,14 @@
     const source=board.panes.find(p=>p.id==='pane-compare-one-reference'),group=comparisonGroups().find(([id])=>id===comparisonImage)||comparisonGroups()[0];
     return {...source,id:'pane-compare-one-reference',mode:'compare',cols:3,title:'One Character, Three Inputs',subtitle:'',collapsed:false,items:(group?.[1]||[]).sort((a,b)=>['Ref2VA','RefA2V','RefA2VA'].indexOf(a.task)-['Ref2VA','RefA2V','RefA2VA'].indexOf(b.task)).filter(i=>!staticSite&&new URLSearchParams(location.search).has('debug')||!board.debug_hidden?.includes(i.id)).map(i=>({id:i.id,weight:i.default_weight,caption:'',label:'',comment:''}))};
   }
-  function comparisonShowcase(){const selector=`<div class="comparison-groups" aria-label="Choose a comparison example">${comparisonGroups().map(([id,rows],i)=>`<button data-comparison-image="${escape(id)}" aria-pressed="${id===comparisonImage}"><img src="${escape(rows[0].poster)}" alt=""><span>Example ${i+1}</span></button>`).join('')}</div>`;return paneHtml(comparisonPane(),1).replace('<p class="layout-compare-hint">',selector+'<p class="layout-compare-hint">');}
+  function comparisonShowcase(){const selector=`<div class="comparison-groups" aria-label="Choose a comparison example">${comparisonGroups().map(([id,rows],i)=>`<button data-comparison-image="${escape(id)}" aria-pressed="${id===comparisonImage}"><img loading="lazy" decoding="async" src="${escape(imageAsset(rows[0].poster))}" alt=""><span>Example ${i+1}</span></button>`).join('')}</div>`;return paneHtml(comparisonPane(),1).replace('<p class="layout-compare-hint">',selector+'<p class="layout-compare-hint">');}
   let comparisonObserver=null,comparisonVisible=false;
-  function startInputVideos(){
-    const section=$('#section-pane-compare-one-reference');if(edit||!section||dialog.open||!comparisonVisible)return;
-    stopVideos();
-    const pane=comparisonPane();
-    section.querySelectorAll('.layout-compare-panel').forEach(panel=>{
-      const entry=pane.items.find(e=>e.id===panel.dataset.item),video=panel.querySelector('[data-compare-video]');
-      if(!entry||!video)return;video.muted=true;video.src=siteAsset(byId[entry.id].weights[entry.weight]);video.play().catch(()=>{});
-    });
-  }
   function watchInputVideos(){
     comparisonObserver?.disconnect();comparisonVisible=false;
     const section=$('#section-pane-compare-one-reference');if(edit||!section)return;
     comparisonObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
       comparisonVisible=entry.isIntersecting&&entry.intersectionRatio>=.15;
-      if(comparisonVisible)startInputVideos();
-      else {
+      if(!comparisonVisible) {
         section.querySelectorAll('[data-compare-video],.input-audio-compare audio').forEach(unloadMedia);
       }
     }),{threshold:[0,.15]});
@@ -380,28 +389,83 @@
       <div class="task-deck" aria-label="Showcase examples" tabindex="0"><div class="orbit-halo" aria-hidden="true"></div><svg class="orbit-track" viewBox="0 0 1100 520" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="550" cy="213" rx="430" ry="126" transform="rotate(-12 550 213)"/></svg><div class="deck-cards"></div></div>
       <div class="deck-controls"><button data-deck-step="-1" aria-label="Previous example">←</button><button data-deck-step="1" aria-label="Next example">→</button></div><p class="deck-info" aria-live="polite"></p>`;
     renderDeck();
+    watchRing();
     let nav=$('.section-float-nav');
     if(!nav){nav=document.createElement('nav');nav.className='section-float-nav';nav.setAttribute('aria-label','Page sections');document.body.append(nav);}
     const sections=[['overview','Overview'],['preview','Showcase'],['section-pane-action-1','Motion'],['section-pane-compare-one-reference','Inputs'],['three-ways','Gallery'],['longform','Duration'],['more-demos','Scenes'],['citation','Citation']];
     nav.innerHTML=sections.map(([id,label],i)=>`<a href="#${id}"><span>${String(i+1).padStart(2,'0')}</span>${label}</a>`).join('');updateSectionNav();
   }
+  const ringPreview=document.createElement("video");
+  ringPreview.muted=true;ringPreview.playsInline=true;ringPreview.preload="none";
+  let ringObserver=null,ringVisible=false,warmGeneration=0,warmVideos=[];
+  const deckActivity={hover:false,animation:false};
+  function setDeckActivity(key,value){
+    if(deckActivity[key]===value)return;
+    deckActivity[key]=value;
+    window.dispatchEvent(new CustomEvent("showcase-activity",{detail:deckActivity.hover||deckActivity.animation}));
+  }
+  function clearRingWarm(){
+    warmGeneration++;
+    warmVideos.forEach(unloadMedia);warmVideos=[];
+  }
+  function scheduleRingWarm(){
+    clearRingWarm();
+    if(!ringVisible||document.hidden||edit)return;
+    const generation=warmGeneration;
+    const run=()=>{
+      if(generation!==warmGeneration||!ringVisible||document.hidden)return;
+      const entries=previewEntries(),n=entries.length;
+      if(!n)return;
+      for(const offset of [-1,0,1]){
+        const entry=entries[(previewIndex+offset+n)%n],url=byId[entry.id]?.weights[entry.weight];
+        if(!url)continue;
+        const video=document.createElement("video");video.muted=true;video.preload="metadata";video.src=url;video.load();warmVideos.push(video);
+      }
+    };
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if("requestIdleCallback" in window)requestIdleCallback(run,{timeout:1800});else setTimeout(run,200);
+    }));
+  }
+  function stopRingMotion(){
+    if(!orbitFrame)return;
+    cancelAnimationFrame(orbitFrame);orbitFrame=0;
+    $(".task-deck")?.classList.remove("is-animating");
+    setDeckActivity("animation",false);
+  }
+  function watchRing(){
+    ringObserver?.disconnect();clearRingWarm();ringVisible=false;
+    const deck=$(".task-deck");if(!deck)return;
+    ringObserver=new IntersectionObserver(([entry])=>{
+      ringVisible=entry.isIntersecting;
+      if(ringVisible){
+        if(orbitPosition!==previewIndex)positionDeck(false);
+        scheduleRingWarm();
+      } else {stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("hover",false);}
+    },{threshold:0});
+    ringObserver.observe(deck);
+  }
+  document.addEventListener("visibilitychange",()=>{if(document.hidden){stopRingMotion();clearRingWarm();unloadMedia(ringPreview);setDeckActivity("hover",false);}else if(ringVisible){if(orbitPosition!==previewIndex)positionDeck(false);scheduleRingWarm();}});
   function renderDeck() {
     const entries=previewEntries();previewIndex=Math.max(0,Math.min(previewIndex,entries.length-1));
-    $('.deck-cards').innerHTML=entries.map((entry,i)=>{const item=byId[entry.id],ringPoster=ringPosters[`${entry.id}|${entry.weight}`],image=escape(ringPoster?.src || poster(entry,item)),ratio=item.width/item.height,w=Math.min(1,ratio),h=Math.min(1,1/ratio);return `<div class="deck-card" data-deck-index="${i}" role="button" tabindex="-1" data-preview-card data-pane="preview-tasks" data-item="${escape(entry.id)}" style="--orbit-width:${w};--orbit-height:${h}" aria-label="Open original example"><div class="orbit-card-body"><div class="preview-frame orbit-front"><img src="${image}" alt="" loading="eager"><video muted playsinline preload="none" poster="${image}"></video></div><div class="orbit-back" aria-hidden="true"><img src="${image}" alt="" loading="eager"><video muted playsinline preload="none" poster="${image}"></video></div></div></div>`;}).join('');
+    $('.deck-cards').innerHTML=entries.map((entry,i)=>{const item=byId[entry.id],ringPoster=ringPosters[`${entry.id}|${entry.weight}`],image=escape(imageAsset(ringPoster?.src || poster(entry,item))),ratio=item.width/item.height,w=Math.min(1,ratio),h=Math.min(1,1/ratio),priority=i===previewIndex?'high':'low';return `<div class="deck-card" data-deck-index="${i}" role="button" tabindex="-1" data-preview-card data-pane="preview-tasks" data-item="${escape(entry.id)}" style="--orbit-width:${w};--orbit-height:${h}" aria-label="Open original example"><div class="orbit-card-body"><div class="preview-frame orbit-front"><img src="${image}" alt="" loading="${i===previewIndex?'eager':'lazy'}" fetchpriority="${priority}" decoding="async"></div><div class="orbit-back" aria-hidden="true"><img src="${image}" alt="" loading="lazy" fetchpriority="${priority}" decoding="async"></div></div></div>`;}).join('');
     orbitPosition=previewIndex;positionDeck(false);
+    $(".deck-card.is-current .orbit-front")?.append(ringPreview);
   }
   let orbitPosition=0,orbitFrame=0;
   function positionDeck(animate=true){
     cancelAnimationFrame(orbitFrame);const entries=previewEntries(),cards=[...document.querySelectorAll('[data-deck-index]')],stage=$('.task-deck');if(!stage)return;
     const width=stage.clientWidth,compact=matchMedia('(min-width:1100px)').matches,mobile=!compact&&width<700,rx=compact?width*.4:mobile?width*.69:Math.min(430,width*.4),ry=compact?96:mobile?90:126;
     const tilt=-12*Math.PI/180,start=orbitPosition,travel=previewIndex-start,began=performance.now(),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const visibleCount=Math.min(15,entries.length),cosTilt=Math.cos(tilt),sinTilt=Math.sin(tilt);
+    const movingCards=cards.map(card=>({card,index:Number(card.dataset.deckIndex),visible:!card.hidden,rear:card.classList.contains('is-rear'),z:card.style.zIndex}));
+    const moving=animate&&!reduced&&!!travel;stage.classList.toggle("is-animating",moving);setDeckActivity("animation",moving);
     cards.forEach(card=>{const current=Number(card.dataset.deckIndex)===previewIndex,was=card.classList.contains('is-current');card.classList.toggle('is-current',current);card.classList.remove('is-featured','is-arriving');card.tabIndex=current?0:-1;card.setAttribute('aria-label',current?'Open current original':'Bring example to front');if(current&&!was&&animate&&!reduced)card.classList.add('is-arriving');});
     const paint=now=>{const progress=!animate||reduced?1:Math.min(1,(now-began)/760),ease=1-Math.pow(1-progress,4);orbitPosition=start+travel*ease;
-      cards.forEach(card=>{const visibleCount=Math.min(15,entries.length),offset=((Number(card.dataset.deckIndex)-orbitPosition+entries.length*1.5)%entries.length)-entries.length/2,visible=Math.abs(offset)<=(visibleCount-1)/2+.5;card.hidden=!visible;
+      movingCards.forEach(state=>{const {card}=state,offset=((state.index-orbitPosition+entries.length*1.5)%entries.length)-entries.length/2,visible=Math.abs(offset)<=(visibleCount-1)/2+.5;if(state.visible!==visible){state.visible=visible;card.hidden=!visible;if(visible)card.removeAttribute('aria-hidden');else card.setAttribute('aria-hidden','true');}
         const theta=offset*2*Math.PI/visibleCount,depth=(Math.cos(theta)+1)/2,x=Math.sin(theta)*rx,y=Math.cos(theta)*ry;
-        card.style.setProperty('--orbit-x',`${(x*Math.cos(tilt)-y*Math.sin(tilt)).toFixed(2)}px`);card.style.setProperty('--orbit-y',`${(x*Math.sin(tilt)+y*Math.cos(tilt)).toFixed(2)}px`);
-        card.style.setProperty('--orbit-scale',(.47+.53*Math.pow(depth,1.7)).toFixed(3));card.style.setProperty('--orbit-yaw',`${(-Math.sin(theta)*58).toFixed(2)}deg`);card.style.setProperty('--orbit-opacity',(.66+.34*depth).toFixed(3));card.style.zIndex=String(Math.round(depth*100)+2);card.classList.toggle('is-rear',depth<.4);if(visible)card.removeAttribute('aria-hidden');else card.setAttribute('aria-hidden','true');
-      });if(progress<1)orbitFrame=requestAnimationFrame(paint);else orbitFrame=0;};paint(began);
+        card.style.setProperty('--orbit-x',`${(x*cosTilt-y*sinTilt).toFixed(2)}px`);card.style.setProperty('--orbit-y',`${(x*sinTilt+y*cosTilt).toFixed(2)}px`);
+        card.style.setProperty('--orbit-scale',(.47+.53*Math.pow(depth,1.7)).toFixed(3));card.style.setProperty('--orbit-yaw',`${(-Math.sin(theta)*58).toFixed(2)}deg`);card.style.setProperty('--orbit-opacity',(.66+.34*depth).toFixed(3));const z=String(Math.round(depth*100)+2);if(state.z!==z){state.z=z;card.style.zIndex=z;}const rear=depth<.4;if(state.rear!==rear){state.rear=rear;card.classList.toggle('is-rear',rear);}
+      });if(progress<1&&moving)orbitFrame=requestAnimationFrame(paint);else{orbitFrame=0;stage.classList.remove("is-animating");setDeckActivity("animation",false);if(moving)scheduleRingWarm();}};paint(began);
     $('[data-deck-step="-1"]').disabled=previewIndex===0;$('[data-deck-step="1"]').disabled=previewIndex===entries.length-1;
     const item=byId[entries[previewIndex].id],segment=promptRecord(item).segs[0]?.text||'';
     const spoken=segment.match(/<d>([\s\S]*?)<\/d>/i)?.[1]?.replace(/^\[[^\]]+\]\s*/,'').trim()||item.segments?.[0]?.line||'';
@@ -418,7 +482,7 @@
     document.querySelectorAll('.task-gallery-card').forEach(card=>card.classList.toggle('is-active',card.dataset.item===id));
     const info=$('.task-gallery-info');info.className=`firstlook-info task-gallery-info task-${item.task}`;
     const rec=promptRecord(item),line=rec.segs[0]?.text||rec.global.split('\n').map(s=>s.trim()).find(s=>s&&!/^GLOBAL PROMPT$|^=+$|^[\w_]+:$/.test(s))||'Prompt unavailable';
-    info.innerHTML=`<img src="${escape(entry.reference_url||poster(entry,item))}" alt="Reference image"><div><strong>${escape(fullTask(item.task))}</strong><small>${escape(duration(item))}</small><p>${fmtPrompt(displayText(line))}</p><div class="firstlook-info-actions">${entry.input_audio_url?`<button type="button" data-audio-src="${escape(entry.input_audio_url)}">${item.task==="RefA2VA"?"▶ Voice reference":"▶ Input audio"}</button><audio preload="none"></audio>`:'<span>Voice described in prompt</span>'}<button type="button" data-action="compare-open" data-pane="pane-task-gallery" data-item="${escape(id)}">Full prompt ↗</button></div></div>`;
+    info.innerHTML=`<img loading="lazy" decoding="async" src="${escape(imageAsset(entry.reference_url||poster(entry,item)))}" alt="Reference image"><div><strong>${escape(fullTask(item.task))}</strong><small>${escape(duration(item))}</small><p>${fmtPrompt(displayText(line))}</p><div class="firstlook-info-actions">${entry.input_audio_url?`<button type="button" data-audio-src="${escape(entry.input_audio_url)}">${item.task==="RefA2VA"?"▶ Voice reference":"▶ Input audio"}</button><audio preload="none"></audio>`:'<span>Voice described in prompt</span>'}<button type="button" data-action="compare-open" data-pane="pane-task-gallery" data-item="${escape(id)}">Full prompt ↗</button></div></div>`;
   }
   const icon = kind => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${({image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.4"/><path d="M4 18l5-5 3 3 3-4 5 6"/>',audio:'<path d="M3 10v4m4-7v10m5-13v16m5-13v10m4-7v4"/>',voice:'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0012 0M12 17v4m-4 0h8"/>',video:'<rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>'})[kind]}</svg>`;
   const taskSpecs={RefA2VA:['Image + Voice → Video + Audio',['image','voice'],['video','audio']],Ref2VA:['Image → Video + Audio',['image'],['video','audio']],RefA2V:['Image + Audio → Video',['image','audio'],['video']]};
@@ -455,7 +519,7 @@
       const permute=(prefix,remaining)=>{if(!remaining.length){const candidate=justifiedLayout(prefix,width,gap,target,minFactor);if(candidate&&(!layout||candidate.cost<layout.cost))layout=candidate;return;}remaining.forEach((e,i)=>permute([...prefix,e],remaining.filter((_,j)=>i!==j)));};
       permute([],entries);
     }
-    grid.innerHTML=(layout?.rows||[]).map(row=>`<div class="task-gallery-row">${row.entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height);return `<div class="task-gallery-card task-${escape(i.task)} ${e.id===activeTask?'is-active':''}" style="width:${row.height*ratio}px;height:${row.height}px" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}"><span class="firstlook-dot"></span><span class="task-card-badge">${(taskSpecs[i.task]?.[1]||[]).map(icon).join('')}<b>→</b>${(taskSpecs[i.task]?.[2]||[]).map(icon).join('')}</span><img src="${escape(poster(e,i))}" alt="" loading="lazy"><video muted playsinline preload="none" poster="${escape(poster(e,i))}"></video></div>`;}).join('')}</div>`).join('');
+    grid.innerHTML=(layout?.rows||[]).map(row=>`<div class="task-gallery-row">${row.entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height);return `<div class="task-gallery-card task-${escape(i.task)} ${e.id===activeTask?'is-active':''}" style="width:${row.height*ratio}px;height:${row.height}px" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}"><span class="firstlook-dot"></span><span class="task-card-badge">${(taskSpecs[i.task]?.[1]||[]).map(icon).join('')}<b>→</b>${(taskSpecs[i.task]?.[2]||[]).map(icon).join('')}</span><img src="${escape(poster(e,i))}" alt="" loading="lazy" decoding="async"><video muted playsinline preload="none"></video></div>`;}).join('')}</div>`).join('');
     const selected=entries.find(e=>e.id===activeTask)||entries[0];if(selected)showTaskInfo(selected.id);
   }
   document.addEventListener('pointerover',event=>{const h=event.target.closest('[data-hex]');if(h&&!h.contains(event.relatedTarget))$('#three-ways').dataset.highlight=h.dataset.hex;});
@@ -470,9 +534,9 @@
     const panes=board.panes.filter(p=>p.id.startsWith('pane-action-'));
     const pane=panes.find(p=>p.id===actionChoice)||panes[0];if(!pane)return '';
     return `<article class="layout-pane motion-showcase" id="section-pane-action-1"><div class="section-heading"><div><h2 class="section-title">One Opening, Different Directions</h2></div></div>
-      <div class="motion-select" role="group" aria-label="Choose a motion example">${panes.map((p,i)=>`<button data-motion-choice="${escape(p.id)}" aria-pressed="${p.id===pane.id}"><img src="${escape(poster(p.items[0],byId[p.items[0].id]))}" alt=""><span>${i===3?'From a bouquet':'From a wave'}<small>${p.items.length} directions</small></span></button>`).join('')}</div>
-      <div class="branch-film"><video controls playsinline preload="none" poster="${siteAsset(actionAsset(pane.id)+'.jpg')}" data-branch-film></video><button class="layout-play" data-action="branch-film-play" data-pane="${escape(pane.id)}" data-src="${siteAsset(actionAsset(pane.id)+'.mp4')}" aria-label="Play motion film">▶</button></div>
-      <div class="branch-originals"><p>Explore each original</p><div style="--routes:${pane.items.length}">${pane.items.map(e=>`<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(e.id)}"><img loading="lazy" src="${escape(poster(e,byId[e.id]))}" alt=""><span>${escape(byId[e.id].segments[1].action)} ↗</span></button>`).join('')}</div></div></article>`;
+      <div class="motion-select" role="group" aria-label="Choose a motion example">${panes.map((p,i)=>`<button data-motion-choice="${escape(p.id)}" aria-pressed="${p.id===pane.id}"><img loading="lazy" decoding="async" src="${escape(poster(p.items[0],byId[p.items[0].id]))}" alt=""><span>${i===3?'From a bouquet':'From a wave'}<small>${p.items.length} directions</small></span></button>`).join('')}</div>
+      <div class="branch-film"><video controls playsinline preload="none" data-poster="${escape(imageAsset(siteAsset(actionAsset(pane.id)+'.jpg')))}" data-branch-film></video><button class="layout-play" data-action="branch-film-play" data-pane="${escape(pane.id)}" data-src="${siteAsset(actionAsset(pane.id)+'.mp4')}" aria-label="Play motion film">▶</button></div>
+      <div class="branch-originals"><p>Explore each original</p><div style="--routes:${pane.items.length}">${pane.items.map(e=>`<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(e.id)}"><img loading="lazy" decoding="async" src="${escape(poster(e,byId[e.id]))}" alt=""><span>${escape(byId[e.id].segments[1].action)} ↗</span></button>`).join('')}</div></div></article>`;
   }
   function scenePane() {
     const used=new Set();
@@ -487,7 +551,7 @@
   }
   function longData(index=longChoice) {
     const data=board.longform[index],e=data.item,i=e&&byId[e.id],ch=longChapters[data.id];
-    return {...data,...(ch?{preview_url:ch.film_url,chapter:ch}:{}),src:i?i.weights[e.weight]:data.src,poster:i?poster(e,i):data.poster,duration:i?i.duration:data.duration,task:i?i.task:data.task};
+    return {...data,...(ch?{preview_url:ch.film_url,chapter:ch}:{}),src:i?i.weights[e.weight]:data.src,poster:i?poster(e,i):imageAsset(data.poster),duration:i?i.duration:data.duration,task:i?i.task:data.task};
   }
   const timeLabel=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
   const longDuration = d => d.duration >= 3600 ? `${Math.floor(d.duration/3600)} h ${Math.floor(d.duration%3600/60)} min` : `${Math.round(d.duration/60)} min`;
@@ -502,11 +566,11 @@
     const d=longData();
     const unit=d.duration<300?1:60; const moments=d.times || [0,Math.floor(d.duration*.25/unit)*unit,Math.floor(d.duration*.5/unit)*unit,Math.max(0,Math.floor((d.duration-(unit===1?10:60))/unit)*unit)];
     return `<article class="layout-pane longform-showcase" id="longform"><div class="section-heading"><div><h2 class="section-title">Minutes to Hours, Across Languages</h2></div></div>
-      <div class="longform-layout"><div class="longform-main ${d.chapter&&!longFull?'has-film':''}"><div class="longform-screen" style="--long-poster:url('${escape(d.poster)}')"><video controls muted loop preload="none" playsinline poster="${escape(d.poster)}" data-long-video></video></div>
+      <div class="longform-layout"><div class="longform-main ${d.chapter&&!longFull?'has-film':''}"><div class="longform-screen"><video controls muted loop preload="none" playsinline data-poster="${escape(d.poster)}" data-long-video></video></div>
       <div class="longform-now"><h3>${escape(d.title)}</h3><span>${escape(longDuration(d))}${d.language?' · '+escape(d.language):''}</span></div><p class="longform-task">${escape(fullTask(d.task))}</p>
       <div class="longform-footer"><button class="source-prompt-link" data-long-full>Watch full length ↗</button>${d.chapter?'':`<div class="longform-chapters" aria-label="Jump to a moment">${[...new Set(moments)].map(t=>`<button data-long-time="${t}">${timeLabel(t)} ↗</button>`).join('')}</div>`}<button class="source-prompt-link" data-long-open="${longChoice}">Original & prompts ↗</button></div></div>
       ${d.chapter?chapterStrip(d):''}
-      <div class="longform-index" role="group" aria-label="Choose a full-length video">${indexes.map(i=>{const x=longData(i);return `<button class="longform-choice" data-long-choice="${i}" aria-pressed="${i===longChoice}"><img src="${escape(x.poster)}" alt="" loading="lazy"><span><strong>${escape(x.title)}</strong><small>${escape(longDuration(x))}${x.language?' · '+escape(x.language):''}</small></span></button>`;}).join('')}</div></div></article>`;
+      <div class="longform-index" role="group" aria-label="Choose a full-length video">${indexes.map(i=>{const x=longData(i);return `<button class="longform-choice" data-long-choice="${i}" aria-pressed="${i===longChoice}"><img src="${escape(x.poster)}" alt="" loading="lazy" decoding="async"><span><strong>${escape(x.title)}</strong><small>${escape(longDuration(x))}${x.language?' · '+escape(x.language):''}</small></span></button>`;}).join('')}</div></div></article>`;
   }
   function chapterStrip(d){
     const segs=d.chapter.segments,last=segs.length-1;
@@ -546,9 +610,9 @@
     const step=event.target.closest('[data-deck-step]');if(step){stepDeck(Number(step.dataset.deckStep));return;}
     const first=event.target.closest('.deck-card');if(first){const index=Number(first.dataset.deckIndex);if(index!==previewIndex){stopVideos();previewIndex=index;positionDeck();}else openCompare(paneById('preview-tasks'),first.dataset.item);return;}
     const taskCard=event.target.closest('.task-gallery-card');if(taskCard){showTaskInfo(taskCard.dataset.item);previewCard(taskCard);return;}
-    const motion=event.target.closest('[data-motion-choice]');if(motion){stopVideos();actionChoice=motion.dataset.motionChoice;$('#section-pane-action-1').outerHTML=actionShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);return;}
+    const motion=event.target.closest('[data-motion-choice]');if(motion){stopVideos();actionChoice=motion.dataset.motionChoice;$('#section-pane-action-1').outerHTML=actionShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchVideoPosters();return;}
     const original=event.target.closest('[data-long-open]');if(original){openLongOriginal(Number(original.dataset.longOpen));return;}
-    const longer=event.target.closest('[data-long-choice]');if(longer){stopVideos();longFull=false;longChoice=Number(longer.dataset.longChoice);$('#longform').outerHTML=longShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchLongVideo();return;}
+    const longer=event.target.closest('[data-long-choice]');if(longer){stopVideos();longFull=false;longChoice=Number(longer.dataset.longChoice);$('#longform').outerHTML=longShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchLongVideo();watchVideoPosters();return;}
     if(event.target.closest('[data-long-full]')){playLong(0);return;}
     const time=event.target.closest('[data-long-time]');if(time){playLong(Number(time.dataset.longTime));return;}
   });
@@ -564,20 +628,28 @@
     if(dialog.open || card.getAttribute("aria-hidden")==="true" || card.querySelector("video[src]")) return;
     stopVideos();
     document.querySelectorAll("[data-preview-card]").forEach(x=>x.classList.toggle("is-featured",x===card));
-    const entry=paneById(card.dataset.pane).items.find(x=>x.id===card.dataset.item), video=card.querySelector(card.classList.contains('is-rear')?'.orbit-back video':'video');
-    video.src=byId[entry.id].weights[entry.weight]; video.muted=false;
-    video.play().catch(()=>{if(!video.hasAttribute("src")) return;video.muted=true;video.play().catch(()=>{});});
+    const entry=paneById(card.dataset.pane).items.find(x=>x.id===card.dataset.item);
+    if(!entry)return;
+    let video=card.querySelector("video");
+    if(card.classList.contains("deck-card")){
+      video=ringPreview;
+      card.querySelector(card.classList.contains("is-rear")?".orbit-back":".orbit-front").append(video);
+    }
+    if(!video)return;
+    video.preload="auto";video.src=byId[entry.id].weights[entry.weight]; video.muted=true;
+    video.play().catch(()=>{});
   }
-  document.addEventListener("pointerover",event=>{const card=event.target.closest("[data-preview-card]");if(card && event.pointerType!=="touch" && !card.contains(event.relatedTarget)){if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
-  document.addEventListener("focusin",event=>{const card=event.target.closest("[data-preview-card]");if(card){if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
-  document.addEventListener("pointerout",event=>{const card=event.target.closest("[data-preview-card]");if(card && !card.contains(event.relatedTarget)){card.classList.remove("is-featured");card.querySelectorAll("video[src]").forEach(unloadMedia);}});
+  document.addEventListener("pointerover",event=>{const card=event.target.closest("[data-preview-card]");if(card && event.pointerType!=="touch" && !card.contains(event.relatedTarget)){if(card.matches('.deck-card'))setDeckActivity("hover",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
+  document.addEventListener("focusin",event=>{const card=event.target.closest("[data-preview-card]");if(card){if(card.matches('.deck-card'))setDeckActivity("hover",true);if(card.matches('.task-gallery-card'))showTaskInfo(card.dataset.item);if(card.matches('.firstlook-card')){activeFirstLook=card.dataset.item;document.querySelectorAll('.firstlook-card').forEach(c=>c.classList.toggle('is-active',c===card));}previewCard(card);}});
+  document.addEventListener("focusout",event=>{if(event.target.closest?.('.deck-card')&&!event.relatedTarget?.closest?.('.deck-card'))setDeckActivity("hover",false);});
+  document.addEventListener("pointerout",event=>{const card=event.target.closest("[data-preview-card]");if(card && !card.contains(event.relatedTarget)){if(card.matches('.deck-card')&&!event.relatedTarget?.closest?.('.deck-card'))setDeckActivity("hover",false);card.classList.remove("is-featured");card.querySelectorAll("video[src]").forEach(unloadMedia);}});
   document.addEventListener("playing",event=>{if(event.target.matches?.(".deck-card video"))event.target.classList.add("is-ready");},true);
   document.addEventListener("keydown",event=>{if(event.target.matches("[data-preview-card]") && ["Enter"," "].includes(event.key)){event.preventDefault();event.target.click();}});
   function render() {
     if (dialog.open) dialog.close();
     stopVideos();
     railObserver.disconnect();
-    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r026</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
+    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r028</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
     const stage=(id)=>{let node=$(`#${id}`);if(!node){node=document.createElement('section');node.id=id;node.className='section section-shell';}return node;};
     const motion=stage('motion-stage'),tasks=stage('tasks-stage'),long=stage('long-stage');
     $('#hero-showcase').after(motion);motion.after($('#task-proof'));$('#task-proof').after(tasks);tasks.after(long);long.after($('#more-demos'));$('#more-demos').after($('#method-details-container'));
@@ -600,6 +672,14 @@
     renderPreview();
     watchInputVideos();
     watchLongVideo();
+    watchVideoPosters();
+    if(!edit){
+      const tasks=$('#three-ways');
+      if(tasks){
+        const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting)){observer.disconnect();ensurePrompts().then(ok=>{if(ok&&activeTask)showTaskInfo(activeTask);});}},{rootMargin:'300px'});
+        observer.observe(tasks);
+      }
+    }
     document.querySelectorAll(".layout-rail .layout-main .layout-player").forEach(player => {
       player.closest(".layout-rail").style.setProperty("--rail-player-height", `${player.offsetHeight}px`);
       railObserver.observe(player);
@@ -765,22 +845,30 @@
     const pane = paneById(panel.dataset.pane), entry = pane?.items.find(e => e.id === panel.dataset.item);
     const item = entry && byId[entry.id], video = $("[data-compare-video]", panel);
     if (!entry || !item || !hasVideo(entry,item) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    video.muted = false;
-    const sound=$(".layout-compare-mute",panel); if(sound){sound.textContent="🔊";sound.setAttribute("aria-label","Mute preview");}
+    video.muted = true;
+    const sound=$(".layout-compare-mute",panel); if(sound){sound.textContent="🔇";sound.setAttribute("aria-label","Unmute preview");}
     video.src = item.weights[entry.weight];
     video.currentTime = 0;
-    video.play().catch(() => { if(!video.hasAttribute("src") || !panel.classList.contains("active")) return; video.muted = true; video.play().catch(() => {}); });
+    video.play().catch(() => {});
   }
   function openCompare(pane, id) {
     const entry = pane.items.find(e => e.id === id);
     if (!entry || !byId[id]) return;
     document.querySelectorAll(".layout-compare-row").forEach(clearCompare);
     const it=byId[id];
+    dialog.dataset.item=id;
     dialog.classList.toggle('prompt-dialog',!edit);
     dialog.innerHTML = edit ? `<div class="layout-dialog-header"><h2>${escape(caption(entry,it))}</h2><button type="button" data-action="compare-close" aria-label="Close player">Close ✕</button></div>${mainContent(pane,entry)}` :
       `<div class="layout-dialog-header"><h2>${escape(fullTask(it.task))}</h2><button type="button" data-action="compare-close" aria-label="Close player">Close ✕</button></div><div class="pt-layout ${escape(it.orientation||'')}" style="--aspect:${it.width/it.height}"><div class="pt-video">${player(entry,it,pane)}</div>${promptPanel(entry,it)}</div>`;
     dialog.showModal();
+    watchVideoPosters();
     activate(pane,id);
+    if(!edit)ensurePrompts().then(ok=>{
+      if(!dialog.open||dialog.dataset.item!==id)return;
+      const panel=$('.pt-panel',dialog);if(!panel)return;
+      if(ok)panel.outerHTML=promptPanel(entry,it);
+      else panel.insertAdjacentHTML('afterbegin','<p class="pt-missing">Prompt details could not be loaded. Reopen to retry.</p>');
+    });
   }
   dialog.addEventListener("close", () => {
     if (dialog.open) return;
@@ -789,8 +877,7 @@
     });
     dialog.querySelectorAll("[data-copy-prompt]").forEach(button=>originalPrompts.delete(button.dataset.copyPrompt));
     dialog.innerHTML = "";
-    if(comparisonVisible)startInputVideos();
-    else if(longVisible&&!longFull)watchLongVideo();
+    if(longVisible&&!longFull)watchLongVideo();
   });
   document.addEventListener("click", event=>{
     const view=event.target.closest("[data-view-original-prompt]");
@@ -826,11 +913,11 @@
   document.addEventListener("pointerover", event => {
     if (event.pointerType === "touch") return;
     const panel = event.target.closest(".layout-compare-panel");
-    if (panel && !isInputVideo(panel.querySelector('video')) && !panel.contains(event.relatedTarget)) expandCompare(panel);
+    if (panel && !panel.contains(event.relatedTarget)) expandCompare(panel);
   });
   document.addEventListener("pointerout", event => {
     const row = event.target.closest(".layout-compare-row");
-    if (row && !(row.closest('#section-pane-compare-one-reference')&&!edit) && !row.classList.contains("comparing") && !row.contains(event.relatedTarget) &&
+    if (row && !row.classList.contains("comparing") && !row.contains(event.relatedTarget) &&
         (!row.contains(document.activeElement) || !document.activeElement.matches(":focus-visible"))) {
       if (row.contains(document.activeElement)) document.activeElement.blur();
       clearCompare(row);
@@ -838,18 +925,18 @@
   });
   document.addEventListener("focusin", event => {
     const panel = event.target.closest(".layout-compare-panel");
-    if (panel && !isInputVideo(panel.querySelector('video'))) expandCompare(panel);
+    if (panel) expandCompare(panel);
   });
   document.addEventListener("focusout", event => {
     const row = event.target.closest(".layout-compare-row");
-    if (row && !(row.closest('#section-pane-compare-one-reference')&&!edit)) setTimeout(() => {
+    if (row) setTimeout(() => {
       if (!row.classList.contains("comparing") && !row.contains(document.activeElement) && !row.matches(":hover")) clearCompare(row);
     }, 0);
   });
   document.addEventListener("pointerdown", event => {
     const panel = event.target.closest(".layout-compare-panel");
-    if (panel && event.pointerType === "touch" && !isInputVideo(panel.querySelector('video'))) panel.dataset.touchWasActive = String(panel.classList.contains("active"));
-    if (!event.target.closest(".layout-compare-row")) document.querySelectorAll(".layout-compare-row:not(.comparing)").forEach(row=>{if(!row.closest('#section-pane-compare-one-reference')||edit)clearCompare(row);});
+    if (panel && event.pointerType === "touch") panel.dataset.touchWasActive = String(panel.classList.contains("active"));
+    if (!event.target.closest(".layout-compare-row")) document.querySelectorAll(".layout-compare-row:not(.comparing)").forEach(clearCompare);
   });
   document.addEventListener("keydown", event => {
     const panel = event.target.closest(".layout-compare-panel");
@@ -980,10 +1067,10 @@
   Promise.all([fetch(staticSite ? "data/items.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/items.json" : "/_layout/items.json").then(r => { if (!r.ok) throw Error("Items unavailable"); return r.json(); }),
                fetch(staticSite ? "data/board.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/board.json" : "/api/board").then(r => { if (!r.ok) throw Error("Board unavailable"); return r.json(); }),
                fetch(staticSite ? "data/orbit-posters.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/orbit-posters.json" : "/assets/r019-orbit-posters/manifest.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
-               fetch(staticSite ? "data/prompts.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/prompts.json" : "/assets/prompts-r022.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
                fetch(staticSite ? "data/ref2va-extra.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/ref2va-extra.json" : "/assets/refa2v-extra-r022.json").then(r => r.ok ? r.json() : []).catch(() => []),
-               fetch(staticSite ? "data/longform-chapters.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/longform-chapters.json" : "/assets/longform-r022/manifest.json").then(r => r.ok ? r.json() : []).catch(() => [])])
-    .then(([items, saved, posters, promptData, extras, chapters]) => { promptOverrides = promptData || {};
+               fetch(staticSite ? "data/longform-chapters.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/longform-chapters.json" : "/assets/longform-r022/manifest.json").then(r => r.ok ? r.json() : []).catch(() => []),
+               staticSite ? Promise.resolve({}) : fetch(window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE+"/assets/optimized-r027/manifest.json" : "/assets/optimized-r027/manifest.json").then(r=>r.ok?r.json():{}).catch(()=>({}))])
+    .then(([items, saved, posters, extras, chapters, optimized]) => { optimizedImages=optimized||{};
       longChapters = Object.fromEntries((chapters||[]).map(c => [c.take_id, c]));
       extraItems = (extras||[]).map(e => ({id:e.id,set:e.collection,task:e.task,image_id:e.reference_image,sample_id:e.sample_id,duration:e.duration,width:e.width,height:e.height,orientation:e.width>=e.height?'landscape':'portrait',weights:{[e.weight]:e.proxy_url},default_weight:e.weight,poster:e.poster,posters:{[e.weight]:e.poster},prompt:e.prompt||'',segments:e.segments||[],caption:'',status:e.review||'',reference_url:e.reference_image}));
       items = [...items, ...extraItems.filter(x => !items.some(i => i.id === x.id))];
