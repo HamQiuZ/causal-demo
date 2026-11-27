@@ -44,7 +44,7 @@
    if(!result.ok)throw Error('保存失败 '+result.status);raw=await result.json();bar.dataset.key='';inlineControls();
   }).catch(err=>{bar.querySelector('small').textContent=err.message+'，请重试';});
  });
- document.addEventListener('click',e=>{const b=e.target.closest('button[data-audio-src]');if(!b)return;const a=b.nextElementSibling;a.src=b.dataset.audioSrc;a.play().catch(()=>{});});
+ document.addEventListener('click',e=>{const b=e.target.closest('button[data-audio-src]');if(!b)return;const a=b.nextElementSibling;if(!a.paused){a.pause();return;}if(!a.hasAttribute('src'))a.src=b.dataset.audioSrc;a.play().catch(()=>{});});
  const clock=seconds=>Number.isFinite(seconds)?`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`:'--:--';
  document.addEventListener('click',e=>{const b=e.target.closest('[data-input-audio-toggle]');if(!b)return;const box=b.closest('.input-audio-compare'),audio=box.querySelector('audio');if(!audio.paused){audio.pause();return;}if(!audio.hasAttribute('src'))audio.src=box.dataset.audioSrc;audio.play().catch(()=>{});});
  document.addEventListener('input',e=>{if(!e.target.matches('[data-input-audio-seek]'))return;const audio=e.target.closest('.input-audio-compare').querySelector('audio');if(Number.isFinite(audio.duration))audio.currentTime=audio.duration*Number(e.target.value)/1000;});

@@ -690,7 +690,7 @@ button.pt-chip{cursor:pointer}button.pt-chip:hover{border-color:var(--task-color
 .hex-hint{position:absolute;left:0;right:0;bottom:-6px;margin:0;text-align:center;font-size:11px;color:#8a9a90}
 .task-gallery-card{transition:opacity .22s,transform .22s,box-shadow .22s}
 .task-gallery-card:hover,.task-gallery-card.is-active{transform:translateY(-3px);box-shadow:0 12px 26px color-mix(in srgb,var(--task-color) 28%,transparent)}
-.task-card-badge{position:absolute;z-index:2;right:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;max-width:calc(100% - 16px);box-sizing:border-box;white-space:nowrap;font-size:12px;padding:6px 10px;border-radius:999px;background:#ffffffe6;color:var(--task-color);opacity:0;transform:translateY(4px);transition:.2s;pointer-events:none}
+.task-card-badge{position:absolute;z-index:2;left:8px;bottom:8px;display:inline-flex;align-items:center;gap:4px;max-width:calc(100% - 16px);box-sizing:border-box;white-space:nowrap;font-size:12px;padding:6px 10px;border-radius:999px;background:#ffffffe6;color:var(--task-color);opacity:0;transform:translateY(4px);transition:.2s;pointer-events:none}
 .task-card-badge svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .task-card-badge b{font-size:11px}
 .task-gallery-card:hover .task-card-badge,.task-gallery-card.is-active .task-card-badge{opacity:1;transform:none}
@@ -752,3 +752,22 @@ button.pt-chip{cursor:pointer}button.pt-chip:hover{border-color:var(--task-color
  .task-deck { height:440px; }
  .deck-card { top:45%;width:calc(270px * var(--orbit-width));height:calc(270px * var(--orbit-height)); }
 }
+
+/* Larger gallery tiles retain the source framing. */
+.task-gallery-grid{grid-template-columns:repeat(var(--gallery-columns,3),minmax(0,1fr));grid-auto-rows:var(--gallery-row,220px);grid-auto-flow:row dense}
+.task-gallery-card{width:100%;height:100%;min-width:0;box-sizing:border-box;background:#e5eae5;border-radius:14px}
+.task-gallery-card.is-portrait{grid-row:span 2}
+.task-gallery-card.is-landscape{grid-column:span 2}
+.hex-fill{stroke:color-mix(in srgb,var(--task-color) 62%,white);stroke-width:1;filter:drop-shadow(0 2px 1px #173b2c16) drop-shadow(0 12px 16px #173b2c20)}
+.hex-highlight{stroke:#ffffffb8;stroke-width:1.3}
+.hex-light{stop-color:color-mix(in srgb,var(--task-color) 5%,white)}
+.hex-dark{stop-color:color-mix(in srgb,var(--task-color) 52%,white)}
+.hex-wrap:has(.task-hex[aria-pressed=true]) .hex-light{stop-color:color-mix(in srgb,var(--task-color) 62%,white)}
+.hex-wrap:has(.task-hex[aria-pressed=true]) .hex-dark{stop-color:color-mix(in srgb,var(--task-color) 88%,#123d30)}
+.hex-wrap:hover .hex-fill,.hex-wrap:focus-within .hex-fill{filter:drop-shadow(0 3px 2px #173b2c20) drop-shadow(0 17px 20px #173b2c30)}
+.hex-wrap .task-icons{border:1px solid #ffffff7a;box-shadow:0 2px 5px #173b2c10,inset 0 1px 0 #ffffffa6}
+.hex-count{border:1px solid #ffffff66}
+@media(max-width:600px){.task-gallery-card{border-radius:11px}.task-card-badge{opacity:1;transform:none;font-size:11px;padding:5px 8px}}
+
+/* Hide redundant showcase copy; prompts remain in the player. */
+.deck-info,#section-scene-examples .source-prompt-link{display:none}
