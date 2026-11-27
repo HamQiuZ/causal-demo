@@ -1,0 +1,94 @@
+[
+  {
+    "take_id": "hourly-01",
+    "title": "Soft-light portrait",
+    "duration_s": 6045.125,
+    "film_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/GlAQWD02R_5FgIVS5ewgU.webm",
+    "film_poster": "media-small/hourly_01_chapter_poster_r022_v1.jpg",
+    "segments": [
+      {
+        "src_start_s": 0,
+        "dur_s": 11.25,
+        "out_start_s": 0,
+        "card": 0
+      },
+      {
+        "src_start_s": 1500,
+        "dur_s": 8,
+        "out_start_s": 11.25,
+        "card": 1
+      },
+      {
+        "src_start_s": 3000,
+        "dur_s": 8,
+        "out_start_s": 19.25,
+        "card": 2
+      },
+      {
+        "src_start_s": 4500,
+        "dur_s": 8,
+        "out_start_s": 27.25,
+        "card": 3
+      },
+      {
+        "src_start_s": 6035.125,
+        "dur_s": 10,
+        "out_start_s": 36,
+        "card": 3
+      }
+    ],
+    "full_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_01@1.web720.mp4",
+    "jumps": [
+      0,
+      1800,
+      3600,
+      5940
+    ]
+  },
+  {
+    "take_id": "hourly-02",
+    "title": "Hat and teal room",
+    "duration_s": 3981.0416666666665,
+    "film_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/9H_mWr-KoAPRaAV8GuaHA.webm",
+    "film_poster": "media-small/hourly_02_chapter_poster_r022_v1.jpg",
+    "segments": [
+      {
+        "src_start_s": 0,
+        "dur_s": 11.25,
+        "out_start_s": 0,
+        "card": 0
+      },
+      {
+        "src_start_s": 990,
+        "dur_s": 8,
+        "out_start_s": 11.25,
+        "card": 1
+      },
+      {
+        "src_start_s": 1980,
+        "dur_s": 8,
+        "out_start_s": 19.25,
+        "card": 2
+      },
+      {
+        "src_start_s": 2970,
+        "dur_s": 8,
+        "out_start_s": 27.25,
+        "card": 3
+      },
+      {
+        "src_start_s": 3971.0416666666665,
+        "dur_s": 10,
+        "out_start_s": 36,
+        "card": 3
+      }
+    ],
+    "full_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_02@1.web720.mp4",
+    "jumps": [
+      0,
+      960,
+      1980,
+      3900
+    ]
+  }
+]

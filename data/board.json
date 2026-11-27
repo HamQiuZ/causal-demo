@@ -1,0 +1,1142 @@
+{
+  "version": 1,
+  "updated": "2026-11-23T12:14:48.489112+00:00",
+  "panes": [
+    {
+      "id": "pane-action-1",
+      "title": "One opening. Different directions.",
+      "subtitle": "One shared opening becomes distinct performances, guided by different motion prompts.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "G-more-b-35197319-A",
+          "weight": "e121g700",
+          "caption": "Wave → Reach up → Cheer overhead → Stretch back → Raise an open palm → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-35197319-B",
+          "weight": "e121g700",
+          "caption": "Wave → Point at the camera → Reach toward the camera → Lean forward on the table → Push both palms forward → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-35197319-C",
+          "weight": "e121g700",
+          "caption": "Wave → Cover the face, then smile → Draw fists to the chest → Clasp hands under the chin → Hand to chest → Hug oneself",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-35197319-D",
+          "weight": "e121g700",
+          "caption": "Wave → Look up → Look aside, then back → Glance aside and grin → Rest head on hand → Laugh looking up",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-compare-one-reference",
+      "title": "One reference, three tasks",
+      "subtitle": "Keep the image and words. Change the inputs to hear and see what each task produces.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "V-expansion-a-38794386-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expansion-a-38794386-refa2v",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expansion-a-38794386-refa2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-action-2",
+      "title": "Same opening, different actions (2)",
+      "subtitle": "One photo and one voice. Every video starts with the same wave; from the second sentence on, each follows a different action prompt.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "G-more-b-24864677-A",
+          "weight": "e121g700",
+          "caption": "Wave → Lift the flowers overhead → Bring the flowers to the face → Sweep the flowers in an arc → Hold the flowers to the chest → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-24864677-B",
+          "weight": "e121g700",
+          "caption": "Wave → Open arms for an embrace while holding flowers → Gesture to the surroundings while holding flowers → Open arms wide while holding flowers → Sweep one arm across while holding flowers → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-24864677-C",
+          "weight": "e121g700",
+          "caption": "Wave → Push both palms forward while holding flowers → Step closer to the camera → Reach toward the camera while holding flowers → Point at the camera while holding flowers → Beckon closer while holding flowers",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-24864677-D",
+          "weight": "e121g700",
+          "caption": "Wave → Look up → Rest head on hand while holding flowers → Laugh looking up → Recoil in surprise while holding flowers → Look aside, then back",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-action-3",
+      "title": "Same opening, different actions (3)",
+      "subtitle": "One photo and one voice. Every video starts with the same wave; from the second sentence on, each follows a different action prompt.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "G-expb-33840944-A",
+          "weight": "e121g700",
+          "caption": "Wave → Reach up → Raise both arms overhead → Cheer overhead → Stretch back → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-expb-33840944-B",
+          "weight": "e121g700",
+          "caption": "Wave → Open arms wide → Sweep one arm across → Open arms for an embrace → Shrug with open palms → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-expb-33840944-C",
+          "weight": "e121g700",
+          "caption": "Wave → Reach toward the camera → Point at the camera → Push both palms forward → Beckon closer → Step closer to the camera",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-expb-33840944-D",
+          "weight": "e121g700",
+          "caption": "Wave → Draw fists to the chest → Cover the face, then smile → Hand to chest → Hug oneself → Clasp hands under the chin",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-action-4",
+      "title": "Same opening, different actions (4)",
+      "subtitle": "One photo and one voice. Every video starts with the same gesture; from the second sentence on, each follows a different action prompt.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "G-more-b-33995792-A",
+          "weight": "e121g700",
+          "caption": "Offer the bouquet → Lift the flowers overhead → Bring the flowers to the face → Sweep the flowers in an arc → Hold the flowers to the chest → Return to the starting pose",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-33995792-C",
+          "weight": "e121g700",
+          "caption": "Offer the bouquet → Reach toward the camera while holding flowers → Point at the camera while holding flowers → Push both palms forward while holding flowers → Beckon closer while holding flowers → Step closer to the camera",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "G-more-b-33995792-D",
+          "weight": "e121g700",
+          "caption": "Offer the bouquet → Recoil in surprise while holding flowers → Rest head on hand while holding flowers → Laugh looking up → Look aside, then back → Glance aside and grin",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-voice-2",
+      "title": "Same lines, three voices (2)",
+      "subtitle": "Same photo, same words and same actions; only the voice source changes.",
+      "mode": "compare",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "V-expb-20881326-ref2va",
+          "weight": "e121g700",
+          "caption": "Ref2VA · voice described in text",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expb-20881326-refa2v",
+          "weight": "e121g700",
+          "caption": "RefA2V · driven by recorded speech",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expb-20881326-refa2va",
+          "weight": "e121g700",
+          "caption": "RefA2VA · cloned from a reference voice",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-2",
+      "title": "Reference Image and Reference Audio → Video and Audio",
+      "subtitle": "Photo + a short voice sample → a talking video in that voice",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D001",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D007",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D009",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D010",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D014",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D017",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D019",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D021",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D024",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D025",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D035",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D036",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D039",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D041",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-3",
+      "title": "Reference Image and Audio → Video",
+      "subtitle": "Photo + speech audio → a lip-synced talking video",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D049",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D052",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D057",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D058",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D065",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D069",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D070",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D072",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D074",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-4",
+      "title": "Stylized",
+      "subtitle": "Illustrated and stylized characters",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D075",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D076",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D077",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D078",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D079",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D081",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-5",
+      "title": "More examples",
+      "subtitle": "Additional portrait and landscape cases",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D089",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D084",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D088",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D082",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D085",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D087",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": "pane-firstlook-rest",
+      "title": "More First Look Cases",
+      "subtitle": "",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D007",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D014",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D019",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D075",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expansion-a-38794386-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-cinematic-40994963-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expb-13871558-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-expb-20881326-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-more-a-33077839-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_wusong",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_columbus",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_andersen",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_dumbbell_color",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div037",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div038",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_wukong",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_vr_office",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_astronaut",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div021",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D052",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D058",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "D069",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "V-more-b-33995792-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "/assets/firstlook-r016/V-more-b-33995792-ref2va.jpg"
+        },
+        {
+          "id": "V-expb-5730570-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "/assets/firstlook-r016/V-expb-5730570-ref2va.jpg"
+        }
+      ]
+    },
+    {
+      "id": "pane-task-gallery",
+      "title": "Three Ways to Create",
+      "subtitle": "",
+      "mode": "grid",
+      "cols": 3,
+      "collapsed": false,
+      "comment": "",
+      "items": [
+        {
+          "id": "D014",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d014_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/7EKNYbijuRLEvgD9gx2EO.wav"
+        },
+        {
+          "id": "D052",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d052_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/WEp5UmDCYoIPa-87vghOn.wav"
+        },
+        {
+          "id": "D019",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d019_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/QbI7rzsuhhfM5DqmSoZhg.wav"
+        },
+        {
+          "id": "R015-r005_wusong",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/r015_r005_wusong_e121g700_poster_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/Pqmd66uMwtG5AMc_svAtc.wav"
+        },
+        {
+          "id": "D057",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d057_v1.jpg",
+          "input_audio_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/input_audio_d057@1.original.wav"
+        },
+        {
+          "id": "D075",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d075_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/P4WLyNRr6PtLPXp73bQhx.wav"
+        },
+        {
+          "id": "R015-r005_columbus",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/r015_r005_columbus_e121g700_poster_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/Pqmd66uMwtG5AMc_svAtc.wav"
+        },
+        {
+          "id": "D058",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d058_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/xrc80RW0qa4ZHfSNyHTbr.wav"
+        },
+        {
+          "id": "D078",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/reference_d078_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/n7ZRBLmnfPD-rXzVzbLNL.wav"
+        },
+        {
+          "id": "R015-r005_dumbbell_color",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/r015_r005_dumbbell_color_e121g700_poster_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/xZjecLhOKhe4xhNb01RsL.wav"
+        },
+        {
+          "id": "D069",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d069_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/QAGyC1ui9OBvuIJbkgFa4.wav"
+        },
+        {
+          "id": "D079",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/reference_d079_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/Tt3TsjxQv4FH9wGXXmdBi.wav"
+        },
+        {
+          "id": "D074",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d074_v1.jpg",
+          "input_audio_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/input_audio_d074@1.original.wav"
+        },
+        {
+          "id": "D089",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344,
+          "reference_url": "media-small/reference_d089_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/jp_xlzE8eKQRxi25GYXTH.wav"
+        },
+        {
+          "id": "R015-r005_astronaut",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/r015_r005_astronaut_e121g700_poster_v1.jpg"
+        },
+        {
+          "id": "D081",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768,
+          "reference_url": "media-small/reference_d081_v1.jpg",
+          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/QWDk5TZCRKtBSo6_CkWEr.wav"
+        }
+      ]
+    }
+  ],
+  "preview": [
+    {
+      "id": "D016",
+      "weight": "p700",
+      "caption": "",
+      "label": "",
+      "comment": ""
+    },
+    {
+      "id": "V-expansion-a-38794386-ref2va",
+      "weight": "e121g700",
+      "caption": "",
+      "label": "",
+      "comment": ""
+    },
+    {
+      "id": "D049",
+      "weight": "e121g700",
+      "caption": "",
+      "label": "",
+      "comment": ""
+    }
+  ],
+  "preview_groups": [
+    {
+      "task": "RefA2VA",
+      "items": [
+        {
+          "id": "D016",
+          "weight": "p700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D076",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D077",
+          "weight": "Exp121 g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D001",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        }
+      ]
+    },
+    {
+      "task": "Ref2VA",
+      "items": [
+        {
+          "id": "V-more-b-18539109-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768
+        },
+        {
+          "id": "V-expansion-a-1128061-ref2va",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768
+        },
+        {
+          "id": "R015-r005_andersen",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div037",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_wukong",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_vr_office",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div021",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        },
+        {
+          "id": "R015-r005_div038",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "task": "RefA2V",
+      "items": [
+        {
+          "id": "D070",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D072",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D049",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 768,
+          "height": 1344
+        },
+        {
+          "id": "D065",
+          "weight": "e121g700",
+          "caption": "",
+          "label": "",
+          "comment": "",
+          "width": 1344,
+          "height": 768
+        }
+      ]
+    }
+  ],
+  "longform": [
+    {
+      "id": "hourly-01",
+      "title": "Soft-light portrait",
+      "task": "RefA2V",
+      "language": "English",
+      "duration": 6045.125,
+      "src": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_01@1.web720.mp4",
+      "preview_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/GlAQWD02R_5FgIVS5ewgU.webm",
+      "poster": "media-small/hourly_01_poster_v1.jpg",
+      "original_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_01@1.web720.mp4",
+      "prompts_url": "data/prompts/hourly-01.json",
+      "reference_url": "/assets/longform-r007/hourly/hourly-01-reference.jpg",
+      "collection": "extended",
+      "times": [
+        0,
+        1800,
+        3600,
+        5940
+      ]
+    },
+    {
+      "id": "hourly-02",
+      "title": "Hat and teal room",
+      "task": "RefA2V",
+      "language": "English",
+      "duration": 3981.042,
+      "src": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_02@1.web720.mp4",
+      "preview_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/9H_mWr-KoAPRaAV8GuaHA.webm",
+      "poster": "media-small/hourly_02_poster_v1.jpg",
+      "original_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/hourly_02@1.web720.mp4",
+      "prompts_url": "data/prompts/hourly-02.json",
+      "reference_url": "/assets/longform-r007/hourly/hourly-02-reference.jpg",
+      "collection": "extended"
+    }
+  ],
+  "debug_hidden": [
+    "D032",
+    "chinese-bouquet",
+    "chinese-garden",
+    "english-balcony",
+    "english-daylight",
+    "hourly-03",
+    "hourly-04",
+    "hourly-05",
+    "hourly-06",
+    "hourly-07",
+    "hourly-08",
+    "hourly-09",
+    "hourly-10",
+    "hourly-11",
+    "hourly-12",
+    "hourly-13",
+    "hourly-14",
+    "hourly-15",
+    "hourly-16",
+    "italian-doorway",
+    "italian-window",
+    "original-hour-00",
+    "original-hour-03",
+    "original-hour-04",
+    "original-hour-05",
+    "original-hour-06",
+    "original-hour-07",
+    "R015-r005_santa",
+    "R015-r005_skydive_high",
+    "R022-c1119-hailuo-16-ref2va",
+    "R022-c1119-x2v-hero-digital-human-poster-ref2va"
+  ],
+  "showcase_order": [
+    "D016",
+    "R015-r005_andersen",
+    "D070",
+    "V-more-b-18539109-ref2va",
+    "R015-r005_div037",
+    "D076",
+    "D072",
+    "R015-r005_wukong",
+    "V-expansion-a-1128061-ref2va",
+    "D077",
+    "R015-r005_vr_office",
+    "D049",
+    "R015-r005_div021",
+    "D001",
+    "D065",
+    "R015-r005_div038"
+  ],
+  "longform_visible": [
+    "hourly-01",
+    "hourly-02"
+  ]
+}
