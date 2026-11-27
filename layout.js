@@ -489,7 +489,7 @@
   const taskSpecs={RefA2VA:['Image + Voice → Video + Audio',['image','voice'],['video','audio']],Ref2VA:['Image → Video + Audio',['image'],['video','audio']],RefA2V:['Image + Audio → Video',['image','audio'],['video']]};
   function taskShowcase(){
     const pane=paneById('pane-task-gallery');if(!pane)return '';
-    return `<article id="three-ways" class="task-gallery-section"><div class="section-heading"><div><h2 class="section-title">Explore the Gallery</h2></div></div><div class="task-gallery-layout"><div class="hex-cluster" role="group" aria-label="Filter by generation task">${['RefA2VA','Ref2VA','RefA2V'].map(t=>{const s=taskSpecs[t];return `<div class="hex-wrap task-${t}"><svg class="hex-shape" viewBox="0 0 230 200" aria-hidden="true" focusable="false"><defs><linearGradient id="hex-gradient-${t}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" class="hex-light"/><stop offset="1" class="hex-dark"/></linearGradient></defs><path class="hex-fill" d="M57.5 1 H172.5 L229 100 L172.5 199 H57.5 L1 100 Z" fill="url(#hex-gradient-${t})"/><path class="hex-highlight" d="M59 5 H171 L224 100 L171 195 H59 L6 100 Z"/></svg><button type="button" class="task-hex" data-hex="${t}" aria-pressed="${t===taskFocus}" title="${escape(fullTask(t))}" aria-label="${escape(fullTask(t))}"><span class="hex-content"><span class="task-icons">${s[1].map(icon).join('')}<b>→</b>${s[2].map(icon).join('')}</span><strong>${s[0]}</strong><em class="hex-count">${(n=>`${n} case${n===1?'':'s'}`)(pane.items.filter(e=>byId[e.id]?.task===t).length)}</em></span></button></div>`;}).join('')}<p class="hex-hint">Hover to highlight · click to filter</p></div><div class="task-gallery-content"><div class="task-gallery-grid"></div><div class="firstlook-info task-gallery-info" aria-live="polite"></div></div></div></article>`;
+    return `<article id="three-ways" class="task-gallery-section"><div class="section-heading"><div><h2 class="section-title">Explore the Gallery</h2></div></div><div class="task-gallery-layout"><aside class="gallery-sidebar"><div class="hex-cluster" role="group" aria-label="Filter by generation task">${['RefA2VA','Ref2VA','RefA2V'].map(t=>{const s=taskSpecs[t];return `<div class="hex-wrap task-${t}"><svg class="hex-shape" viewBox="0 0 230 200" aria-hidden="true" focusable="false"><defs><linearGradient id="hex-gradient-${t}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" class="hex-light"/><stop offset="1" class="hex-dark"/></linearGradient></defs><path class="hex-fill" d="M57.5 1 H172.5 L229 100 L172.5 199 H57.5 L1 100 Z" fill="url(#hex-gradient-${t})"/><path class="hex-highlight" d="M59 5 H171 L224 100 L171 195 H59 L6 100 Z"/></svg><button type="button" class="task-hex" data-hex="${t}" aria-pressed="${t===taskFocus}" title="${escape(fullTask(t))}" aria-label="${escape(fullTask(t))}"><span class="hex-content"><span class="task-icons">${s[1].map(icon).join('')}<b>→</b>${s[2].map(icon).join('')}</span><strong>${s[0]}</strong><em class="hex-count">${(n=>`${n} case${n===1?'':'s'}`)(pane.items.filter(e=>byId[e.id]?.task===t).length)}</em></span></button></div>`;}).join('')}<p class="hex-hint">Hover to highlight · click to filter</p></div><div class="gallery-timeline" aria-label="Gallery groups"></div><div class="firstlook-info task-gallery-info" aria-live="polite"></div></aside><div class="task-gallery-content"><div class="task-gallery-grid"></div></div></div></article>`;
   }
   function justifiedLayout(entries,width,gap,target,minFactor){
     const ratio=e=>(e.width||byId[e.id].width)/(e.height||byId[e.id].height);
@@ -507,9 +507,17 @@
     }
     return best[0];
   }
+  let galleryPage=0,galleryElapsed=0,galleryManual=false;
   function renderTaskCards(){
     const pane=paneById('pane-task-gallery'),grid=$('.task-gallery-grid');
-    const entries=pane.items.filter(e=>!taskFocus||byId[e.id].task===taskFocus);
+    const tasks=['RefA2VA','Ref2VA','RefA2V'],pages=tasks.length;
+    galleryPage=((galleryPage%pages)+pages)%pages;
+    taskFocus=tasks[galleryPage];
+    const entries=pane.items.filter(e=>byId[e.id].task===taskFocus);
+    $('#three-ways').dataset.highlight=taskFocus;
+    document.querySelectorAll('[data-hex]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.hex===taskFocus)));
+    $('.gallery-timeline').innerHTML=Array.from({length:pages},(_,i)=>`<button type="button" data-gallery-page="${i}" aria-label="Show task ${i+1}: ${escape(fullTask(tasks[i]))}" aria-current="${i===galleryPage?'step':'false'}"><span>${String(i+1).padStart(2,'0')}</span><i></i></button>`).join('');
+    grid.querySelectorAll('video').forEach(unloadMedia);
     const width=grid.clientWidth,gap=innerWidth<=900?10:16,columns=width<500?2:width<900?3:4;
     grid.style.setProperty('--gallery-columns',columns);
     grid.style.setProperty('--gallery-row',`${Math.round((width-gap*(columns-1))/columns)}px`);
@@ -518,7 +526,21 @@
   }
   document.addEventListener('pointerover',event=>{const h=event.target.closest('[data-hex]');if(h&&!h.contains(event.relatedTarget))$('#three-ways').dataset.highlight=h.dataset.hex;});
   document.addEventListener('pointerout',event=>{const h=event.target.closest('[data-hex]');if(h&&!h.contains(event.relatedTarget))$('#three-ways').dataset.highlight=taskFocus;});
-  document.addEventListener('click',event=>{const h=event.target.closest('[data-hex]');if(!h)return;stopVideos();taskFocus=taskFocus===h.dataset.hex?'':h.dataset.hex;$('#three-ways').dataset.highlight=taskFocus;document.querySelectorAll('[data-hex]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.hex===taskFocus)));renderTaskCards();});
+  document.addEventListener('click',event=>{const h=event.target.closest('[data-hex]');if(!h)return;stopVideos();galleryPage=['RefA2VA','Ref2VA','RefA2V'].indexOf(h.dataset.hex);galleryElapsed=0;taskFocus=h.dataset.hex;$('#three-ways').dataset.highlight=taskFocus;document.querySelectorAll('[data-hex]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.hex===taskFocus)));renderTaskCards();});
+  document.addEventListener('click',event=>{
+    if(!event.target.closest('#three-ways'))return;
+    galleryManual=true;galleryElapsed=0;
+    const button=event.target.closest('[data-gallery-page]');
+    if(button){galleryPage=Number(button.dataset.galleryPage);renderTaskCards();}
+    $('.gallery-timeline')?.style.setProperty('--progress',0);
+  },true);
+  setInterval(()=>{
+    const section=$('#three-ways');if(edit||!section||galleryManual||document.hidden||dialog.open)return;
+    const r=section.getBoundingClientRect();if(r.top>=innerHeight*.8||r.bottom<=innerHeight*.2)return;
+    galleryElapsed+=100;
+    if(galleryElapsed>=10000){galleryElapsed=0;galleryPage++;renderTaskCards();}
+    $('.gallery-timeline')?.style.setProperty('--progress',galleryElapsed/10000);
+  },100);
   let galleryResize=0;
   addEventListener('resize',()=>{clearTimeout(galleryResize);galleryResize=setTimeout(()=>{if(!edit&&$('.task-gallery-grid')){$('#three-ways').querySelectorAll('video[src],audio[src]').forEach(unloadMedia);renderTaskCards();}},120);});
   document.addEventListener('wheel',event=>{const strip=event.target.closest('.firstlook-strip');if(!strip||event.ctrlKey)return;const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;if(!delta)return;if((delta<0&&strip.scrollLeft<=0)||(delta>0&&strip.scrollLeft+strip.clientWidth>=strip.scrollWidth-1))return;event.preventDefault();strip.scrollBy({left:delta,behavior:'smooth'});},{passive:false});
@@ -651,7 +673,7 @@
     if (dialog.open) dialog.close();
     stopVideos();
     railObserver.disconnect();
-    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r030</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
+    toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r033</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
     const stage=(id)=>{let node=$(`#${id}`);if(!node){node=document.createElement('section');node.id=id;node.className='section section-shell';}return node;};
     const motion=stage('motion-stage'),tasks=stage('tasks-stage'),long=stage('long-stage');
     $('#hero-showcase').after(motion);motion.after($('#task-proof'));$('#task-proof').after(tasks);tasks.after(long);long.after($('#more-demos'));$('#more-demos').after($('#method-details-container'));
