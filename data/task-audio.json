@@ -154,9 +154,5 @@
   "D081": {
     "url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/QWDk5TZCRKtBSo6_CkWEr.wav",
     "label": "原始驱动音频"
-  },
-  "D089": {
-    "url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/jp_xlzE8eKQRxi25GYXTH.wav",
-    "label": "参考音频 · 音色示例"
   }
 }

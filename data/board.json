@@ -461,13 +461,6 @@
       "comment": "",
       "items": [
         {
-          "id": "D089",
-          "weight": "Exp121 g700",
-          "caption": "",
-          "label": "",
-          "comment": ""
-        },
-        {
           "id": "D084",
           "weight": "Exp121 g700",
           "caption": "",
@@ -842,17 +835,6 @@
           "input_audio_url": "https://huggingface.co/keizez3/CausalGen/resolve/50d190e82b71c45cf49b7ee0df1162f9d4f23f6e/media/input_audio_d074@1.original.wav"
         },
         {
-          "id": "D089",
-          "weight": "Exp121 g700",
-          "caption": "",
-          "label": "",
-          "comment": "",
-          "width": 768,
-          "height": 1344,
-          "reference_url": "media-small/reference_d089_v2.webp",
-          "input_audio_url": "https://cdn-uploads.huggingface.co/production/uploads/6877a1a3c38b08df75a8ff48/jp_xlzE8eKQRxi25GYXTH.wav"
-        },
-        {
           "id": "R015-r005_astronaut",
           "weight": "e121g700",
           "caption": "",
@@ -1084,39 +1066,7 @@
       "collection": "extended"
     }
   ],
-  "debug_hidden": [
-    "D032",
-    "chinese-bouquet",
-    "chinese-garden",
-    "english-balcony",
-    "english-daylight",
-    "hourly-03",
-    "hourly-04",
-    "hourly-05",
-    "hourly-06",
-    "hourly-07",
-    "hourly-08",
-    "hourly-09",
-    "hourly-10",
-    "hourly-11",
-    "hourly-12",
-    "hourly-13",
-    "hourly-14",
-    "hourly-15",
-    "hourly-16",
-    "italian-doorway",
-    "italian-window",
-    "original-hour-00",
-    "original-hour-03",
-    "original-hour-04",
-    "original-hour-05",
-    "original-hour-06",
-    "original-hour-07",
-    "R015-r005_santa",
-    "R015-r005_skydive_high",
-    "R022-c1119-hailuo-16-ref2va",
-    "R022-c1119-x2v-hero-digital-human-poster-ref2va"
-  ],
+  "hidden": [],
   "showcase_order": [
     "D016",
     "R015-r005_andersen",

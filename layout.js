@@ -13,7 +13,7 @@
   let selected = {}, drag = null, saveQueue = Promise.resolve(), activeCompare = null;
   const originalPrompts = new Map();
   let promptSerial = 0;
-  const originalTextView = () => edit || (!staticSite && new URLSearchParams(location.search).has("debug"));
+  const originalTextView = () => edit;
   const containsCJK = text => /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(text);
   const displayText = value => {
     const text=String(value??"");
@@ -29,6 +29,7 @@
   const toolbar = document.createElement("div");
   toolbar.className = "layout-toolbar";
   banner.append(toolbar);
+  if (staticSite) { banner.hidden = true; document.documentElement.style.setProperty("--layout-banner-height", "0px"); }
   const drawer = document.createElement("aside");
   drawer.className = "layout-drawer";
   drawer.setAttribute("aria-label", "Demo library");
@@ -160,7 +161,7 @@
     if (!item) return "";
     const inside = rail ? `<button class="layout-rail-card ${selected[pane.id] === entry.id ? "selected" : ""}" data-action="select" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}">
       <img loading="lazy" decoding="async" src="${escape(poster(entry,item))}" alt=""><span><strong>${escape(group ? item.image_id : caption(entry,item))}</strong>${group ? `<small>${group.length} variant${group.length === 1 ? "" : "s"}</small>` : ""}${tags(entry,item)}${hasVideo(entry,item) ? "" : "<small>not run yet</small>"}</span></button>` :
-      `${player(entry,item,pane)}<button class="source-prompt-link" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}">View prompts ↗</button>`;
+      `${player(entry,item,pane)}${pane.id === "scene-examples" && !edit ? `<button class="scene-open" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}" aria-label="View prompts">↗</button>` : `<button class="source-prompt-link" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(item.id)}">View prompts ↗</button>`}`;
     return `<div class="layout-card" style="--card-aspect:${item.width / item.height}" data-drop-pane="${escape(pane.id)}" data-drop-item="${escape(item.id)}" ${edit ? `draggable="true" data-drag-pane="${escape(pane.id)}" data-drag-item="${escape(item.id)}"` : ""}>${inside}${group ? "" : inspector(pane,entry,item,index)}</div>`;
   }
   function prompts(item) {
@@ -187,7 +188,7 @@
   function taskGalleryPane(){
     const pane=board.panes.find(p=>p.id==='pane-task-gallery');if(!pane)return pane;
     const have=new Set(pane.items.map(e=>e.id)),items=[...pane.items];
-    extraItems.filter(i=>!have.has(i.id)&&!board.debug_hidden?.includes(i.id)).forEach((i,k)=>items.splice(Math.min(items.length,2+k*5),0,{id:i.id,weight:i.default_weight,caption:'',label:'',comment:'',width:i.width,height:i.height,reference_url:i.reference_url,input_audio_url:null}));
+    extraItems.filter(i=>!have.has(i.id)&&!board.hidden?.includes(i.id)).forEach((i,k)=>items.splice(Math.min(items.length,2+k*5),0,{id:i.id,weight:i.default_weight,caption:'',label:'',comment:'',width:i.width,height:i.height,reference_url:i.reference_url,input_audio_url:null}));
     return {...pane,items};
   }
   const promptRecord=item=>{
@@ -265,17 +266,17 @@
       const item = byId[entry.id], available = hasVideo(entry, item);
       const action = item.segments?.some(segment => segment.action);
       const time = duration(item), label = action ? item.segments[1].action : fullTask(item.task);
-      return `<div class="layout-compare-unit">${!isAction ? `<h3 class="compare-task-name">${taskLabel(item.task)}</h3>` : ""}<div class="layout-compare-panel" role="button" tabindex="0" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}" data-drop-pane="${escape(pane.id)}" data-drop-item="${escape(entry.id)}" ${edit ? `draggable="true" data-drag-pane="${escape(pane.id)}" data-drag-item="${escape(entry.id)}"` : ""} aria-label="${escape(`${label}, ${time}. Preview and open player`)}">
+      return `<div class="layout-compare-unit"><div class="layout-compare-panel" role="button" tabindex="0" data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}" data-drop-pane="${escape(pane.id)}" data-drop-item="${escape(entry.id)}" ${edit ? `draggable="true" data-drag-pane="${escape(pane.id)}" data-drag-item="${escape(entry.id)}"` : ""} aria-label="${escape(`${label}, ${time}. Preview and open player`)}">
         <div class="layout-compare-media">
           <img loading="lazy" decoding="async" src="${escape(poster(entry,item))}" alt="">
           <video preload="none" muted playsinline data-compare-video></video>
         </div>
         <div class="layout-compare-shade"></div>
-        <div class="layout-compare-label"><strong data-current-action="${escape(entry.id)}">${escape(label)}</strong>
+        <div class="layout-compare-label">${action ? `<strong data-current-action="${escape(entry.id)}">${escape(label)}</strong>` : ""}
           
           ${available ? "" : "<small>not run yet</small>"}</div>
         ${available ? `<button type="button" class="layout-compare-mute" data-action="compare-mute" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}" aria-label="Unmute preview">🔇</button>` : ""}
-      </div>${item.segments?.length ? `<div class="layout-compare-inline">${action ? `<p class="layout-action-path" data-path-item="${escape(entry.id)}">${actionPath(entry,item)}</p>` : ""}<p class="layout-compare-segment" data-inline-segment="${escape(entry.id)}"></p></div>` : ""}</div>`;
+      </div>${!isAction ? taskPill(item.task) + audioBox(pane, item, entry.id) : ""}${item.segments?.length ? `<div class="layout-compare-inline">${action ? `<p class="layout-action-path" data-path-item="${escape(entry.id)}">${actionPath(entry,item)}</p>` : ""}<p class="layout-compare-segment" data-inline-segment="${escape(entry.id)}"></p></div>` : ""}</div>`;
     }).join("");
     const captions = entries.map(entry => {
       const item = byId[entry.id], action = item.segments?.some(segment => segment.action);
@@ -325,6 +326,11 @@
       contents = `<div class="layout-rail">${mainContent(pane, entry)}<div class="layout-rail-list">${cards}</div></div>`;
     }
     if (valid.length && pane.mode === "grid") contents = `<div class="layout-grid" style="--cols:${pane.cols}">${valid.map((e,i) => card(pane,e,i,false)).join("")}</div>`;
+    if (valid.length && pane.id === "scene-examples" && !edit) {
+      const rows = [[],[]], widths = [0,0];
+      valid.forEach((e,i) => { const k = widths.indexOf(Math.min(...widths)); rows[k].push(card(pane,e,i,false)); widths[k] += byId[e.id].width / byId[e.id].height; });
+      contents = `<div class="layout-grid scene-rows">${rows.map(r => `<div class="scene-row">${r.join("")}</div>`).join("")}</div>`;
+    }
     if (valid.length && pane.mode === "compare") contents = compareContent(pane, valid);
     if (pane.id === "pane-action-1" && !edit) contents = `<div class="branch-film"><video controls playsinline preload="none" poster="/assets/action-branch-r005.jpg" data-branch-film></video><button class="layout-play" data-action="branch-film-play" data-pane="${escape(pane.id)}" aria-label="Play four-way motion film">▶</button></div>
       <div class="branch-originals"><p>Explore the originals</p><div>${valid.map(entry => `<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(entry.id)}"><img loading="lazy" decoding="async" src="${escape(poster(entry,byId[entry.id]))}" alt=""><span>${escape(byId[entry.id].segments[1].action)} ↗</span></button>`).join("")}</div></div>`;
@@ -358,9 +364,31 @@
     return [...entries].sort((a,b)=>{const ai=order.indexOf(a.id),bi=order.indexOf(b.id);return (ai<0?order.length:ai)-(bi<0?order.length:bi);});
   };
   function taskLabel(task) {
-    const [input,output]=fullTask(task).split(' → ');
-    return `<span>${escape(input)}</span><small>→ ${escape(output)}</small>`;
+    return escape(shortTask(task));
   }
+  let audios = {};
+  const clockText = seconds => Number.isFinite(seconds) ? `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}` : "--:--";
+  const audioBox = (pane, item, id) => {
+    if (edit || pane.id !== "pane-compare-one-reference") return "";
+    if (item.task === "Ref2VA") return `<div class="input-audio-compare"><span class="input-audio-label">Voice described in prompt</span></div>`;
+    const entry = audios[id];
+    if (!entry) return `<div class="input-audio-compare"><span class="input-audio-label">Audio unavailable</span></div>`;
+    const label = item.task === "RefA2V" ? "Driving speech" : "Voice reference";
+    const src = staticSite ? (window.LAYOUT_URLS[entry.url] || entry.url) : entry.url;
+    return `<div class="input-audio-compare" data-audio-src="${escape(src)}"><span class="input-audio-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4m4-7v10m4-13v16m4-13v10m4-7v4"/></svg>${label}</span><div class="input-audio-controls"><button type="button" data-input-audio-toggle aria-label="Play ${label}">▶</button><input type="range" min="0" max="1000" value="0" aria-label="Seek ${label}" data-input-audio-seek><small data-input-audio-time>0:00 / --:--</small><audio preload="none"></audio></div></div>`;
+  };
+  document.addEventListener("click", e => { const b = e.target.closest("button[data-audio-src]"); if (!b) return; const a = b.nextElementSibling; if (!a.paused) { a.pause(); return; } if (!a.hasAttribute("src")) a.src = b.dataset.audioSrc; a.play().catch(() => {}); });
+  document.addEventListener("click", e => { const b = e.target.closest("[data-input-audio-toggle]"); if (!b) return; const box = b.closest(".input-audio-compare"), audio = box.querySelector("audio"); if (!audio.paused) { audio.pause(); return; } if (!audio.hasAttribute("src")) audio.src = box.dataset.audioSrc; audio.play().catch(() => {}); });
+  document.addEventListener("input", e => { if (!e.target.matches("[data-input-audio-seek]")) return; const audio = e.target.closest(".input-audio-compare").querySelector("audio"); if (Number.isFinite(audio.duration)) audio.currentTime = audio.duration * Number(e.target.value) / 1000; });
+  ["play", "pause", "timeupdate", "durationchange", "ended"].forEach(type => document.addEventListener(type, e => {
+    const audio = e.target; if (!audio.matches?.(".input-audio-compare audio")) return;
+    const box = audio.closest(".input-audio-compare"), button = box.querySelector("[data-input-audio-toggle]");
+    button.textContent = audio.paused ? "▶" : "❚❚";
+    button.setAttribute("aria-label", `${audio.paused ? "Play" : "Pause"} ${box.querySelector(".input-audio-label").textContent}`);
+    box.querySelector("[data-input-audio-seek]").value = Number.isFinite(audio.duration) && audio.duration ? Math.round(audio.currentTime / audio.duration * 1000) : 0;
+    box.querySelector("[data-input-audio-time]").textContent = `${clockText(audio.currentTime)} / ${clockText(audio.duration)}`;
+  }, true));
+  const taskPill = task => { const s = taskSpecs[task]; return s ? `<span class="input-pill" role="img" title="${escape(fullTask(task))}" aria-label="${escape(fullTask(task))}">${s[1].map(icon).join('')}<b>→</b>${s[2].map(icon).join('')}</span>` : ""; };
   let comparisonImage='more-b-18539109';
   function comparisonGroups(){
     const groups=new Map();library.filter(i=>i.id.startsWith('V-')).forEach(i=>{if(!groups.has(i.image_id))groups.set(i.image_id,[]);groups.get(i.image_id).push(i);});
@@ -368,9 +396,9 @@
   }
   function comparisonPane(){
     const source=board.panes.find(p=>p.id==='pane-compare-one-reference'),group=comparisonGroups().find(([id])=>id===comparisonImage)||comparisonGroups()[0];
-    return {...source,id:'pane-compare-one-reference',mode:'compare',cols:3,title:'One Character, Three Inputs',subtitle:'',collapsed:false,items:(group?.[1]||[]).sort((a,b)=>['Ref2VA','RefA2V','RefA2VA'].indexOf(a.task)-['Ref2VA','RefA2V','RefA2VA'].indexOf(b.task)).filter(i=>!staticSite&&new URLSearchParams(location.search).has('debug')||!board.debug_hidden?.includes(i.id)).map(i=>({id:i.id,weight:i.default_weight,caption:'',label:'',comment:''}))};
+    return {...source,id:'pane-compare-one-reference',mode:'compare',cols:3,title:'One Character, Three Inputs',subtitle:'',collapsed:false,items:(group?.[1]||[]).sort((a,b)=>['Ref2VA','RefA2V','RefA2VA'].indexOf(a.task)-['Ref2VA','RefA2V','RefA2VA'].indexOf(b.task)).filter(i=>!board.hidden?.includes(i.id)).map(i=>({id:i.id,weight:i.default_weight,caption:'',label:'',comment:''}))};
   }
-  function comparisonShowcase(){const selector=`<div class="comparison-groups" aria-label="Choose a comparison example">${comparisonGroups().map(([id,rows],i)=>`<button data-comparison-image="${escape(id)}" aria-pressed="${id===comparisonImage}"><img loading="lazy" decoding="async" src="${escape(imageAsset(rows[0].poster))}" alt=""><span>Example ${i+1}</span></button>`).join('')}</div>`;return paneHtml(comparisonPane(),1).replace('<p class="layout-compare-hint">',selector+'<p class="layout-compare-hint">');}
+  function comparisonShowcase(){const selector=`<div class="comparison-groups" aria-label="Choose a comparison example">${comparisonGroups().map(([id,rows],i)=>`<button data-comparison-image="${escape(id)}" aria-pressed="${id===comparisonImage}" aria-label="Example ${i+1}"><img loading="lazy" decoding="async" src="${escape(imageAsset(rows[0].poster))}" alt=""></button>`).join('')}</div>`;return paneHtml(comparisonPane(),1).replace('<p class="layout-compare-hint">',selector+'<p class="layout-compare-hint">').replace(/<p class="layout-compare-hint">Hover to preview[^<]*<\/p>/,'');}
   let comparisonObserver=null,comparisonVisible=false;
   function watchInputVideos(){
     comparisonObserver?.disconnect();comparisonVisible=false;
@@ -383,7 +411,7 @@
     }),{threshold:[0,.15]});
     comparisonObserver.observe(section);
   }
-  document.addEventListener('click',event=>{const button=event.target.closest('[data-comparison-image]');if(!button)return;stopVideos();comparisonImage=button.dataset.comparisonImage;$('#section-pane-compare-one-reference').outerHTML=comparisonShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchInputVideos();});
+  document.addEventListener('click',event=>{const button=event.target.closest('[data-comparison-image]');if(!button)return;stopVideos();comparisonImage=button.dataset.comparisonImage;$('#section-pane-compare-one-reference').outerHTML=comparisonShowcase();if(!edit)renderScenes();watchInputVideos();});
   function renderPreview() {
     const groups=previewGroups(); if(!groups.length) return;
     $('#preview').innerHTML=`<div class="preview-heading"><h2>Bring Any Character to Life</h2></div>
@@ -393,8 +421,8 @@
     watchRing();
     let nav=$('.section-float-nav');
     if(!nav){nav=document.createElement('nav');nav.className='section-float-nav';nav.setAttribute('aria-label','Page sections');document.body.append(nav);}
-    const sections=[['preview','Showcase'],['overview','Overview'],['section-pane-action-1','Motion'],['section-pane-compare-one-reference','Inputs'],['three-ways','Gallery'],['longform','Duration'],['more-demos','Scenes'],['citation','Citation']];
-    nav.innerHTML=sections.map(([id,label],i)=>`<a href="#${id}"><span>${String(i+1).padStart(2,'0')}</span>${label}</a>`).join('');updateSectionNav();
+    const sections=[['preview','Showcase'],['section-pane-action-1','Motion'],['section-pane-compare-one-reference','Inputs'],['longform','Duration'],['three-ways','Gallery'],['method-details-container','Method'],['citation','Citation']];
+    nav.innerHTML=sections.map(([id,label])=>`<a href="#${id}">${label}</a>`).join('');updateSectionNav();
   }
   const ringPreview=document.createElement("video");
   ringPreview.muted=true;ringPreview.playsInline=true;ringPreview.preload="none";
@@ -482,14 +510,14 @@
     activeTask=id;
     document.querySelectorAll('.task-gallery-card').forEach(card=>card.classList.toggle('is-active',card.dataset.item===id));
     const info=$('.task-gallery-info');info.className=`firstlook-info task-gallery-info task-${item.task}`;
-    const rec=promptRecord(item),line=rec.segs[0]?.text||rec.global.split('\n').map(s=>s.trim()).find(s=>s&&!/^GLOBAL PROMPT$|^=+$|^[\w_]+:$/.test(s))||'Prompt unavailable';
-    info.innerHTML=`<img loading="lazy" decoding="async" src="${escape(imageAsset(entry.reference_url||poster(entry,item)))}" alt="Reference image"><div><strong>${escape(fullTask(item.task))}</strong><small>${escape(duration(item))}</small><p>${fmtPrompt(displayText(line))}</p><div class="firstlook-info-actions">${entry.input_audio_url?`<button type="button" data-audio-src="${escape(entry.input_audio_url)}">${item.task==="RefA2VA"?"▶ Voice reference":"▶ Input audio"}</button><audio preload="none"></audio>`:'<span>Voice described in prompt</span>'}<button type="button" data-action="compare-open" data-pane="pane-task-gallery" data-item="${escape(id)}">Full prompt ↗</button></div></div>`;
+    info.innerHTML=`<img loading="lazy" decoding="async" src="${escape(imageAsset(entry.reference_url||poster(entry,item)))}" alt="Reference image"><div><strong>${escape(shortTask(item.task))}</strong><small>${escape(duration(item))}</small><div class="firstlook-info-actions">${entry.input_audio_url?`<button type="button" data-audio-src="${escape(entry.input_audio_url)}">${item.task==="RefA2VA"?"▶ Voice reference":"▶ Input audio"}</button><audio preload="none"></audio>`:'<span>Voice described in prompt</span>'}<button type="button" data-action="compare-open" data-pane="pane-task-gallery" data-item="${escape(id)}">Full prompt ↗</button></div></div>`;
   }
   const icon = kind => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${({image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.4"/><path d="M4 18l5-5 3 3 3-4 5 6"/>',audio:'<path d="M3 10v4m4-7v10m5-13v16m5-13v10m4-7v4"/>',voice:'<rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0012 0M12 17v4m-4 0h8"/>',video:'<rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>'})[kind]}</svg>`;
   const taskSpecs={RefA2VA:['Image + Voice → Video + Audio',['image','voice'],['video','audio']],Ref2VA:['Image → Video + Audio',['image'],['video','audio']],RefA2V:['Image + Audio → Video',['image','audio'],['video']]};
+  const shortTask = task => taskSpecs[task]?.[0] || fullTask(task);
   function taskShowcase(){
     const pane=paneById('pane-task-gallery');if(!pane)return '';
-    return `<article id="three-ways" class="task-gallery-section"><div class="section-heading"><div><h2 class="section-title">Explore the Gallery</h2></div></div><div class="task-gallery-layout"><aside class="gallery-sidebar"><div class="hex-cluster" role="group" aria-label="Filter by generation task">${['RefA2VA','Ref2VA','RefA2V'].map(t=>{const s=taskSpecs[t];return `<div class="hex-wrap task-${t}"><svg class="hex-shape" viewBox="0 0 230 200" aria-hidden="true" focusable="false"><defs><linearGradient id="hex-gradient-${t}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" class="hex-light"/><stop offset="1" class="hex-dark"/></linearGradient></defs><path class="hex-fill" d="M57.5 1 H172.5 L229 100 L172.5 199 H57.5 L1 100 Z" fill="url(#hex-gradient-${t})"/><path class="hex-highlight" d="M59 5 H171 L224 100 L171 195 H59 L6 100 Z"/></svg><button type="button" class="task-hex" data-hex="${t}" aria-pressed="${t===taskFocus}" title="${escape(fullTask(t))}" aria-label="${escape(fullTask(t))}"><span class="hex-content"><span class="task-icons">${s[1].map(icon).join('')}<b>→</b>${s[2].map(icon).join('')}</span><strong>${s[0]}</strong><em class="hex-count">${(n=>`${n} case${n===1?'':'s'}`)(pane.items.filter(e=>byId[e.id]?.task===t).length)}</em></span></button></div>`;}).join('')}<p class="hex-hint">Hover to highlight · click to filter</p></div><div class="gallery-timeline" aria-label="Gallery groups"></div><div class="firstlook-info task-gallery-info" aria-live="polite"></div></aside><div class="task-gallery-content"><div class="task-gallery-grid"></div></div></div></article>`;
+    return `<article id="three-ways" class="task-gallery-section"><div class="section-heading"><div><h2 class="section-title">Explore the Gallery</h2></div></div><div class="task-gallery-layout"><aside class="gallery-sidebar"><div class="hex-cluster" role="group" aria-label="Filter by generation task">${['RefA2VA','Ref2VA','RefA2V'].map(t=>{const s=taskSpecs[t];return `<div class="hex-wrap task-${t}"><svg class="hex-shape" viewBox="0 0 230 200" aria-hidden="true" focusable="false"><defs><linearGradient id="hex-gradient-${t}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox"><stop offset="0" class="hex-light"/><stop offset="1" class="hex-dark"/></linearGradient></defs><path class="hex-fill" d="M57.5 1 H172.5 L229 100 L172.5 199 H57.5 L1 100 Z" fill="url(#hex-gradient-${t})"/><path class="hex-highlight" d="M59 5 H171 L224 100 L171 195 H59 L6 100 Z"/></svg><button type="button" class="task-hex" data-hex="${t}" aria-pressed="${t===taskFocus}" title="${escape(fullTask(t))}" aria-label="${escape(fullTask(t))}"><span class="hex-content"><span class="task-icons">${s[1].map(icon).join('')}<b>→</b>${s[2].map(icon).join('')}</span><strong>${s[0].split(' → ')[0]}</strong><small>→ ${s[0].split(' → ')[1]}</small><em class="hex-count">${(n=>`${n} case${n===1?'':'s'}`)(pane.items.filter(e=>byId[e.id]?.task===t).length)}</em></span></button></div>`;}).join('')}</div><div class="gallery-timeline" aria-label="Gallery groups"></div><div class="firstlook-info task-gallery-info" aria-live="polite"></div></aside><div class="task-gallery-content"><div class="task-gallery-grid"></div></div></div></article>`;
   }
   function justifiedLayout(entries,width,gap,target,minFactor){
     const ratio=e=>(e.width||byId[e.id].width)/(e.height||byId[e.id].height);
@@ -518,10 +546,10 @@
     document.querySelectorAll('[data-hex]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.hex===taskFocus)));
     $('.gallery-timeline').innerHTML=Array.from({length:pages},(_,i)=>`<button type="button" data-gallery-page="${i}" aria-label="Show task ${i+1}: ${escape(fullTask(tasks[i]))}" aria-current="${i===galleryPage?'step':'false'}"><span>${String(i+1).padStart(2,'0')}</span><i></i></button>`).join('');
     grid.querySelectorAll('video').forEach(unloadMedia);
-    const width=grid.clientWidth,gap=innerWidth<=900?10:16,columns=width<500?2:width<900?3:4;
+    const width=grid.clientWidth,gap=innerWidth<=900?10:16,columns=width<500?2:width<700?3:4;
     grid.style.setProperty('--gallery-columns',columns);
     grid.style.setProperty('--gallery-row',`${Math.round((width-gap*(columns-1))/columns)}px`);
-    grid.innerHTML=entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height),portrait=ratio<1;return `<div class="task-gallery-card task-${escape(i.task)} ${portrait?'is-portrait':'is-landscape'} ${e.id===activeTask?'is-active':''}" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}. Open video"><span class="firstlook-dot"></span><span class="task-card-badge" aria-hidden="true">▶ Play</span><img src="${escape(poster(e,i))}" alt="" loading="lazy" decoding="async"><video muted playsinline preload="none"></video></div>`;}).join('');
+    grid.innerHTML=entries.map(e=>{const i=byId[e.id],ratio=(e.width||i.width)/(e.height||i.height),portrait=ratio<1;return `<div class="task-gallery-card task-${escape(i.task)} ${portrait?'is-portrait':'is-landscape'} ${e.id===activeTask?'is-active':''}" role="button" tabindex="0" data-preview-card data-pane="pane-task-gallery" data-item="${escape(e.id)}" aria-label="${escape(fullTask(i.task))}, ${escape(duration(i))}. Open video"><span class="task-card-badge" aria-hidden="true">▶ Play</span><img src="${escape(poster(e,i))}" alt="" loading="lazy" decoding="async"><video muted playsinline preload="none"></video></div>`;}).join('');
     const selected=entries.find(e=>e.id===activeTask)||entries[0];if(selected)showTaskInfo(selected.id);
   }
   document.addEventListener('pointerover',event=>{const h=event.target.closest('[data-hex]');if(h&&!h.contains(event.relatedTarget))$('#three-ways').dataset.highlight=h.dataset.hex;});
@@ -546,13 +574,50 @@
   document.addEventListener('wheel',event=>{const strip=event.target.closest('.firstlook-strip');if(!strip||event.ctrlKey)return;const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;if(!delta)return;if((delta<0&&strip.scrollLeft<=0)||(delta>0&&strip.scrollLeft+strip.clientWidth>=strip.scrollWidth-1))return;event.preventDefault();strip.scrollBy({left:delta,behavior:'smooth'});},{passive:false});
   document.addEventListener('keydown',event=>{const strip=event.target.closest('.firstlook-strip');if(strip&&['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();strip.scrollBy({left:(event.key==='ArrowRight'?1:-1)*strip.clientWidth/3,behavior:'smooth'});}});
   const actionAsset = id => id==='pane-action-1'?'/assets/action-speakers-r014':`/assets/action-${id}-r006`;
+  const motionChooser = (panes, pane) => `<div class="motion-select" role="group" aria-label="Choose a motion example">${panes.map((p,i)=>`<button data-motion-choice="${escape(p.id)}" aria-pressed="${p.id===pane.id}" aria-label="${escape(`Motion example ${i+1}, ${p.items.length} directions`)}"><img loading="lazy" decoding="async" src="${escape(poster(p.items[0],byId[p.items[0].id]))}" alt=""></button>`).join('')}</div>`;
   function actionShowcase() {
     const panes=board.panes.filter(p=>p.id.startsWith('pane-action-'));
     const pane=panes.find(p=>p.id===actionChoice)||panes[0];if(!pane)return '';
+    const chooser=motionChooser(panes,pane);
     return `<article class="layout-pane motion-showcase" id="section-pane-action-1"><div class="section-heading"><div><h2 class="section-title">One Opening, Different Directions</h2></div></div>
-      <div class="motion-select" role="group" aria-label="Choose a motion example">${panes.map((p,i)=>`<button data-motion-choice="${escape(p.id)}" aria-pressed="${p.id===pane.id}"><img loading="lazy" decoding="async" src="${escape(poster(p.items[0],byId[p.items[0].id]))}" alt=""><span>${i===3?'From a bouquet':'From a wave'}<small>${p.items.length} directions</small></span></button>`).join('')}</div>
       <div class="branch-film"><video controls playsinline preload="none" data-poster="${escape(imageAsset(siteAsset(actionAsset(pane.id)+'.jpg')))}" data-branch-film></video><button class="layout-play" data-action="branch-film-play" data-pane="${escape(pane.id)}" data-src="${siteAsset(actionAsset(pane.id)+'.mp4')}" aria-label="Play motion film">▶</button></div>
-      <div class="branch-originals"><p>Explore each original</p><div style="--routes:${pane.items.length}">${pane.items.map(e=>`<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(e.id)}"><img loading="lazy" decoding="async" src="${escape(poster(e,byId[e.id]))}" alt=""><span>${escape(byId[e.id].segments[1].action)} ↗</span></button>`).join('')}</div></div></article>`;
+      ${chooser}
+      <div class="branch-originals"><span>Originals</span>${pane.items.map((e,i)=>{const letter=String.fromCharCode(65+i);return `<button data-action="compare-open" data-pane="${escape(pane.id)}" data-item="${escape(e.id)}" aria-label="${escape(`Open original clip ${letter} and its prompts`)}">${letter} ↗</button>`;}).join('')}</div></article>`;
+  }
+  let sceneMarquee=null;
+  function renderScenes() {
+    sceneMarquee?.stop();
+    $("#layout-rest").innerHTML=paneHtml(scenePane(),0);
+    bindSceneMarquee();
+  }
+  function bindSceneMarquee() {
+    const section=$('#section-scene-examples');if(!section||edit)return;
+    const speed=34;let visible=true,raf=0,last=0;
+    const tracks=[...section.querySelectorAll('.scene-row')].map((row,index)=>{
+      const cards=[...row.children],track=document.createElement('div');
+      track.className='scene-track';
+      cards.forEach(card=>track.append(card));
+      cards.forEach(card=>{const copy=card.cloneNode(true);copy.setAttribute('aria-hidden','true');copy.inert=true;track.append(copy);});
+      row.append(track);
+      return {row,track,dir:index%2?1:-1,x:0,half:0};
+    });
+    const measure=()=>tracks.forEach(t=>{t.half=t.track.children[t.track.children.length/2]?.offsetLeft||0;});
+    const frame=now=>{
+      raf=requestAnimationFrame(frame);
+      const dt=last?Math.min(.1,(now-last)/1000):0;last=now;
+      const dialogOpen=!!document.querySelector('dialog[open]');
+      tracks.forEach(t=>{
+        const paused=!visible||dialogOpen||t.row.matches(':hover')||t.row.contains(document.activeElement);
+        if(!paused&&t.half>0){t.x+=t.dir*speed*dt;if(t.x<=-t.half)t.x+=t.half;if(t.x>0)t.x-=t.half;}
+        t.track.style.transform=`translate3d(${t.x.toFixed(2)}px,0,0)`;
+      });
+    };
+    const io=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;},{threshold:0});
+    io.observe(section);
+    measure();
+    addEventListener('resize',measure);
+    raf=requestAnimationFrame(frame);
+    sceneMarquee={stop(){cancelAnimationFrame(raf);io.disconnect();removeEventListener('resize',measure);}};
   }
   function scenePane() {
     const used=new Set();
@@ -563,13 +628,14 @@
     const moved=(board.panes.find(p=>p.id==='pane-firstlook-rest')?.items||[]).filter(e=>!visibleIds.has(e.id)),ids=new Set(moved.map(e=>e.id));
     moved.forEach(e=>used.add(byId[e.id]?.image_id));
     const items=[...moved,...board.panes.filter(p=>p.mode==='grid'&&p.id!=='pane-firstlook-rest'&&p.id!=='pane-task-gallery').flatMap(p=>p.items).filter(e=>{const image=byId[e.id]?.image_id;if(visibleIds.has(e.id)||ids.has(e.id)||used.has(image))return false;used.add(image);return true;})];
-    return {id:'scene-examples',mode:'grid',cols:3,title:'Characters & Scenes',subtitle:'Different appearances, settings and performances across the three generation tasks.',items};
+    return {id:'scene-examples',mode:'grid',cols:3,title:'Characters & Scenes',items};
   }
   function longData(index=longChoice) {
     const data=board.longform[index],e=data.item,i=e&&byId[e.id],ch=longChapters[data.id];
     return {...data,...(ch?{preview_url:ch.film_url,chapter:ch}:{}),src:i?i.weights[e.weight]:data.src,poster:i?poster(e,i):imageAsset(data.poster),duration:i?i.duration:data.duration,task:i?i.task:data.task};
   }
   const timeLabel=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+  const longTitle = () => `Minutes to Hours${new Set(longIndexes().map(i => longData(i).language).filter(Boolean)).size > 1 ? ", Across Languages" : ""}`;
   const longDuration = d => d.duration >= 3600 ? `${Math.floor(d.duration/3600)} h ${Math.floor(d.duration%3600/60)} min` : `${Math.round(d.duration/60)} min`;
   let longFull=false,longVisible=false,longObserver=null;
   function longIndexes() {
@@ -581,16 +647,16 @@
     let indexes=longIndexes();if(!indexes.length)return '<article id="longform"><p>No videos are currently selected.</p></article>';if(!indexes.includes(longChoice))longChoice=indexes[0];
     const d=longData();
     const unit=d.duration<300?1:60; const moments=d.times || [0,Math.floor(d.duration*.25/unit)*unit,Math.floor(d.duration*.5/unit)*unit,Math.max(0,Math.floor((d.duration-(unit===1?10:60))/unit)*unit)];
-    return `<article class="layout-pane longform-showcase" id="longform"><div class="section-heading"><div><h2 class="section-title">Minutes to Hours, Across Languages</h2></div></div>
+    return `<article class="layout-pane longform-showcase" id="longform"><div class="section-heading"><div><h2 class="section-title">${escape(longTitle())}</h2></div></div>
       <div class="longform-layout"><div class="longform-main ${d.chapter&&!longFull?'has-film':''}"><div class="longform-screen"><video controls muted loop preload="none" playsinline data-poster="${escape(d.poster)}" data-long-video></video></div>
-      <div class="longform-now"><h3>${escape(d.title)}</h3><span>${escape(longDuration(d))}${d.language?' · '+escape(d.language):''}</span></div><p class="longform-task">${escape(fullTask(d.task))}</p>
+      <div class="longform-now"><span>${escape(longDuration(d))}</span></div><p class="longform-task">${d.language?escape(d.language)+' · ':''}${escape(shortTask(d.task))}</p>
       <div class="longform-footer"><button class="source-prompt-link" data-long-full>Watch full length ↗</button>${d.chapter?'':`<div class="longform-chapters" aria-label="Jump to a moment">${[...new Set(moments)].map(t=>`<button data-long-time="${t}">${timeLabel(t)} ↗</button>`).join('')}</div>`}<button class="source-prompt-link" data-long-open="${longChoice}">Original & prompts ↗</button></div></div>
       ${d.chapter?chapterStrip(d):''}
-      <div class="longform-index" role="group" aria-label="Choose a full-length video">${indexes.map(i=>{const x=longData(i);return `<button class="longform-choice" data-long-choice="${i}" aria-pressed="${i===longChoice}"><img src="${escape(x.poster)}" alt="" loading="lazy" decoding="async"><span><strong>${escape(x.title)}</strong><small>${escape(longDuration(x))}${x.language?' · '+escape(x.language):''}</small></span></button>`;}).join('')}</div></div></article>`;
+      <div class="longform-index" role="group" aria-label="Choose a full-length video">${indexes.map(i=>{const x=longData(i);return `<button class="longform-choice" data-long-choice="${i}" aria-pressed="${i===longChoice}" aria-label="${escape(`${x.title}, ${longDuration(x)}`)}"><img src="${escape(x.poster)}" alt="" loading="lazy" decoding="async"><span><strong>${escape(longDuration(x))}</strong></span></button>`;}).join('')}</div></div></article>`;
   }
   function chapterStrip(d){
     const segs=d.chapter.segments,last=segs.length-1;
-    return `<div class="chapter-strip" role="group" aria-label="Chapters of this take">${segs.map((s,k)=>`<button type="button" class="chapter-card" data-long-time="${Math.floor(s.src_start_s)}" data-chapter-out="${s.out_start_s}" data-chapter-end="${s.out_start_s+s.dur_s}"><span class="chapter-no">${k===last?'End':`Ch ${k+1}`}</span><strong>${timeLabel(s.src_start_s)}</strong><small>${k===last?'final moments':`plays ${Math.round(s.dur_s)} s at 1×`}</small><i class="chapter-bar" style="--pos:${(s.src_start_s/d.duration*100).toFixed(2)}%"></i></button>`).join('')}</div>`;
+    return `<div class="chapter-strip" role="group" aria-label="Chapters of this take">${segs.map((s,k)=>`<button type="button" class="chapter-card" aria-label="${escape(k===last?`Final moments, starts at ${timeLabel(s.src_start_s)}`:`Chapter ${k+1}, starts at ${timeLabel(s.src_start_s)}`)}" data-long-time="${Math.floor(s.src_start_s)}" data-chapter-out="${s.out_start_s}" data-chapter-end="${s.out_start_s+s.dur_s}"><strong>${timeLabel(s.src_start_s)}</strong><i class="chapter-bar" style="--pos:${(s.src_start_s/d.duration*100).toFixed(2)}%"></i></button>`).join('')}</div>`;
   }
   document.addEventListener('timeupdate',e=>{const v=e.target;if(!v.matches?.('[data-long-video]')||longFull)return;document.querySelectorAll('.chapter-card').forEach(c=>c.classList.toggle('is-now',v.currentTime>=+c.dataset.chapterOut&&v.currentTime<+c.dataset.chapterEnd));},true);
   function watchLongVideo(){
@@ -626,9 +692,9 @@
     const step=event.target.closest('[data-deck-step]');if(step){stepDeck(Number(step.dataset.deckStep));return;}
     const first=event.target.closest('.deck-card');if(first){const index=Number(first.dataset.deckIndex);if(index!==previewIndex){stopVideos();previewIndex=index;positionDeck();}else openCompare(paneById('preview-tasks'),first.dataset.item);return;}
     const taskCard=event.target.closest('.task-gallery-card');if(taskCard){showTaskInfo(taskCard.dataset.item);openCompare(paneById('pane-task-gallery'),taskCard.dataset.item);return;}
-    const motion=event.target.closest('[data-motion-choice]');if(motion){stopVideos();actionChoice=motion.dataset.motionChoice;$('#section-pane-action-1').outerHTML=actionShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchVideoPosters();return;}
+    const motion=event.target.closest('[data-motion-choice]');if(motion){stopVideos();actionChoice=motion.dataset.motionChoice;$('#section-pane-action-1').outerHTML=actionShowcase();if(!edit)renderScenes();watchVideoPosters();return;}
     const original=event.target.closest('[data-long-open]');if(original){openLongOriginal(Number(original.dataset.longOpen));return;}
-    const longer=event.target.closest('[data-long-choice]');if(longer){stopVideos();longFull=false;longChoice=Number(longer.dataset.longChoice);$('#longform').outerHTML=longShowcase();if(!edit)$("#layout-rest").innerHTML=paneHtml(scenePane(),0);watchLongVideo();watchVideoPosters();return;}
+    const longer=event.target.closest('[data-long-choice]');if(longer){stopVideos();longFull=false;longChoice=Number(longer.dataset.longChoice);$('#longform').outerHTML=longShowcase();if(!edit)renderScenes();watchLongVideo();watchVideoPosters();return;}
     if(event.target.closest('[data-long-full]')){playLong(0);return;}
     const time=event.target.closest('[data-long-time]');if(time){playLong(Number(time.dataset.longTime));return;}
   });
@@ -676,7 +742,7 @@
     toolbar.innerHTML = staticSite ? '' : `<a href="/versions/index.html">Versions · r033</a><button data-action="toggle-edit" aria-pressed="${edit}">${edit ? "Edit: on" : "Edit"}</button>${edit ? `<button data-action="toggle-library" aria-pressed="${drawerOpen}">${drawerOpen ? "Hide library" : "Library"}</button><button data-action="add-pane">+ Pane</button><a href="/api/export.md" target="_blank">Export .md</a>` : ""}`;
     const stage=(id)=>{let node=$(`#${id}`);if(!node){node=document.createElement('section');node.id=id;node.className='section section-shell';}return node;};
     const motion=stage('motion-stage'),tasks=stage('tasks-stage'),long=stage('long-stage');
-    $('#hero-showcase').after(motion);motion.after($('#task-proof'));$('#task-proof').after(tasks);tasks.after(long);long.after($('#more-demos'));$('#more-demos').after($('#method-details-container'));
+    $('#hero-showcase').after(motion);motion.after($('#task-proof'));$('#task-proof').after(long);long.after(tasks);tasks.after($('#more-demos'));$('#more-demos').after($('#method-details-container'));
     $('#demos').hidden=!edit;
     $('#highlights').hidden=!edit;
     if(edit) {
@@ -689,8 +755,7 @@
       $('#task-proof').hidden=false;
       $('#task-proof').innerHTML=comparisonShowcase();
       motion.innerHTML=actionShowcase();tasks.innerHTML=taskShowcase();long.innerHTML=longShowcase();$('#three-ways').dataset.highlight=taskFocus;renderTaskCards();
-      tasks.querySelector('.hex-hint')?.remove();
-      $("#layout-rest").innerHTML=paneHtml(scenePane(),0);
+      renderScenes();
     }
     renderDrawer();
     renderPreview();
@@ -1093,11 +1158,21 @@
                fetch(staticSite ? "data/orbit-posters.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/orbit-posters.json" : "/assets/r019-orbit-posters/manifest.json").then(r => r.ok ? r.json() : {}).catch(() => ({})),
                fetch(staticSite ? "data/ref2va-extra.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/ref2va-extra.json" : "/assets/refa2v-extra-r022.json").then(r => r.ok ? r.json() : []).catch(() => []),
                fetch(staticSite ? "data/longform-chapters.json" : window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE + "/longform-chapters.json" : "/assets/longform-r022/manifest.json").then(r => r.ok ? r.json() : []).catch(() => []),
-               staticSite ? Promise.resolve({}) : fetch(window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE+"/assets/optimized-r027/manifest.json" : "/assets/optimized-r027/manifest.json").then(r=>r.ok?r.json():{}).catch(()=>({}))])
-    .then(([items, saved, posters, extras, chapters, optimized]) => { optimizedImages=optimized||{};
+               staticSite ? Promise.resolve({}) : fetch(window.LAYOUT_ARCHIVE ? window.LAYOUT_ARCHIVE+"/assets/optimized-r027/manifest.json" : "/assets/optimized-r027/manifest.json").then(r=>r.ok?r.json():{}).catch(()=>({})),
+               fetch(staticSite ? "data/task-audio.json" : "/assets/task-audio-r008.json").then(r => r.ok ? r.json() : {}).catch(() => ({}))])
+    .then(([items, saved, posters, extras, chapters, optimized, audioMap]) => { optimizedImages=optimized||{}; audios=audioMap||{};
       longChapters = Object.fromEntries((chapters||[]).map(c => [c.take_id, c]));
       extraItems = (extras||[]).map(e => ({id:e.id,set:e.collection,task:e.task,image_id:e.reference_image,sample_id:e.sample_id,duration:e.duration,width:e.width,height:e.height,orientation:e.width>=e.height?'landscape':'portrait',weights:{[e.weight]:e.proxy_url},default_weight:e.weight,poster:e.poster,posters:{[e.weight]:e.poster},prompt:e.prompt||'',segments:e.segments||[],caption:'',status:e.review||'',reference_url:e.reference_image}));
       items = [...items, ...extraItems.filter(x => !items.some(i => i.id === x.id))];
-      library = items; byId = Object.fromEntries(items.map(i => [i.id,i])); board = saved; ringPosters = posters; longChoice=Math.max(0,board.longform.findIndex(d=>d.id==='hourly-01')); render(); })
+      library = items; byId = Object.fromEntries(items.map(i => [i.id,i])); if (!edit) {
+        const hidden = new Set(saved.hidden || []);
+        saved.preview_groups?.forEach(g => g.items = g.items.filter(e => !hidden.has(e.id)));
+        saved.panes?.forEach(p => p.items = p.items.filter(e => !hidden.has(e.id)));
+        saved.preview_groups = saved.preview_groups?.filter(g => g.items.length);
+        saved.panes = saved.panes?.filter(p => p.items.length);
+        saved.longform = saved.longform?.filter(e => !hidden.has(e.id || e.item?.id));
+      }
+      board = saved; 
+ringPosters = posters; longChoice=Math.max(0,board.longform.findIndex(d=>d.id==='hourly-01')); render(); })
     .catch(error => { $("#layout-first").textContent = `Layout preview failed: ${error.message}`; });
 })();

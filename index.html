@@ -17,15 +17,16 @@
     <title>SenseNova-SekoTalk-H3 — Prompt-Switchable Audio-Video Generation</title>
     <link rel="preconnect" href="https://cdn-uploads.huggingface.co" crossorigin />
     <link rel="preconnect" href="https://huggingface.co" crossorigin />
-    <link rel="stylesheet" href="styles.css?v=r029" />
-    <link rel="stylesheet" href="layout.css?v=r029" />
-    <script src="script.js?v=r029" defer></script>
-    <script src="hero-contours.js?v=r029" defer></script>
-    <script src="hero-speaker.js?v=r029" defer></script>
-    <script src="hero-flow.js?v=r029" defer></script>
+    <link rel="stylesheet" href="styles.css?v=r030" />
+    <link rel="stylesheet" href="layout.css?v=r030" />
+    <link rel="stylesheet" href="summary.css?v=r030" />
+    <script src="script.js?v=r030" defer></script>
+    <script src="hero-contours.js?v=r030" defer></script>
+    <script src="hero-speaker.js?v=r030" defer></script>
+    <script src="hero-flow.js?v=r030" defer></script>
     <script src="static.js"></script>
-    <script src="debug.js?v=r029"></script>
-    <script src="layout.js?v=r029" defer></script>
+    <script src="layout.js?v=r030" defer></script>
+    <script src="summary.js?v=r030" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -68,23 +69,16 @@
 
       <div id="hero-showcase" class="hero-showcase">
           <section id="preview" class="early-preview" aria-label="Demo preview"></section>
-          <section id="overview" class="hero-overview" aria-labelledby="overview-title">
-            <div>
-              <h2 id="overview-title">Overview</h2>
-              <p>SekoTalk-H3 follows changing motion prompts while generating continuous audio and video, preserving character and scene through reusable context.</p>
-            </div>
-            <a class="overview-thumbnail" href="assets/method-teaser.svg?v=r029" target="_blank" rel="noreferrer" aria-label="Open the full-size method overview">
-              <img src="assets/method-teaser.svg?v=r029" alt="SekoTalk-H3 method overview" loading="lazy" decoding="async" />
-            </a>
-          </section>
       </div>
 
       <section id="task-proof" class="section section-shell task-proof"></section>
       <section id="method-details-container" class="section section-shell overview-section">
         <section class="method-details" id="method-details" aria-labelledby="technical-title">
-          <div class="method-heading">
-            <h3 id="technical-title">Technical details</h3>
-          </div>
+          <div class="section-heading"><div><h2 class="section-title" id="technical-title">How It Works</h2></div></div>
+          <p class="method-lede">SekoTalk-H3 follows changing motion prompts while generating continuous audio and video, preserving character and scene through reusable context.</p>
+          <a class="overview-thumbnail" href="assets/method-teaser.svg?v=r030" target="_blank" rel="noreferrer" aria-label="Open the full-size method overview">
+            <img src="assets/method-teaser.svg?v=r030" alt="SekoTalk-H3 method overview" loading="lazy" decoding="async" />
+          </a>
           <div class="method-groups">
             <article class="method-group" aria-labelledby="training-title">
               <div class="method-group-heading"><span aria-hidden="true">01</span><h4 id="training-title">Training</h4></div>
